@@ -1,0 +1,56 @@
+{
+  "audiobook_id": "092a1539528d4372",
+  "user_id": "7cfda7fa-bb3c-4212-83e8-43710b369ca7",
+  "title": "QUIZZO doc",
+  "author": "trova",
+  "original_filename": "QUIZZO doc.pdf",
+  "upload_path": "audiobooks\\uploads\\092a1539528d4372_QUIZZO doc.pdf",
+  "voice": "lisa",
+  "tts_provider": "gtts",
+  "word_count": 952,
+  "character_count": 7185,
+  "chapter_count": 6,
+  "chapters": [
+    {
+      "chapter_number": 1,
+      "title": "Chapter 1",
+      "content": "QUIZZO:  \n Kenya\u2019s Localized  AI Learning, Assessment & Smart Proctoring Engine",
+      "char_count": 83
+    },
+    {
+      "chapter_number": 2,
+      "title": "1. PROBLEM STATEMENT",
+      "content": "Kenya continues to face disparities in delivering high -quality, equitable, and accessible \neducation across different regions. Under the Competency -Based Curriculum (CBC), teachers \nare exp ected to provide personalized learning experiences, continuous assessments, and timely \nperformance interventions. However, many institutions \u2014especially in rural and low -income \nareas \u2014struggle with limited teaching resources, high teacher workloads, and unev en learning \nmaterials. This results in students receiving generalized content rather than personalized \ninstruction tailored to their learning pace and comprehension level.  \nTeachers often spend excessive time preparing lesson notes, quizzes, exams, and revi sion \nmaterials, reducing time for actual teaching and mentorship. Limited digital learning tools also \nmeans students lack access to contextualized  content aligned with the Kenyan curriculum. \nExisting AI learning tools are foreign, expensive, and not locali zed to Kenya\u2019s cultural, \nlinguistic, or CBC needs. They also lack Kiswahili support and do not cater to the realities of \nKenyan learners.  \nFurthermore, classroom and online assessments often lack integrity. Cheating, impersonation, \nand exam malpractice rema in significant challenges. Schools need tools that ensure assessments \nare fair, transparent, and reliable. Without robust digital proctoring systems, online and \ncontinuous assessments suffer credibility issues.  \nIn addition, education data is rarely analyze d in real -time. Teachers have minimal visibility into \nindividual student weaknesses, learning patterns, or competency gaps. Schools cannot easily \ntrack long -term performance trends, and policymakers lack reliable analytics they can use to \nsupport curriculu m improvements or resource allocation.  \nOverall, Kenya lacks an accessible, localized , and AI -driven learning engine that can generate \ncontextual educational content, automate assessments, enforce academic integrity, and provide \nreal-time analytics for stud ents, teachers, and school administrators.  \n\n\n\n\n The core challenge is therefore :  \nTo build a national -level AI -powered platform that strengthens learning outcomes, enhances \nassessment integrity, reduces teacher workload, and supports data -driven educational gove rnance \nacross Kenya.",
+      "char_count": 2319
+    },
+    {
+      "chapter_number": 3,
+      "title": "2. PROPOSED SOLUTION",
+      "content": "Quizzo  is an AI -powered, localized learning and assessment platform designed to transform \nKenya\u2019s education ecosystem. It integrates Generative AI, Agentic AI, and Smart Proctoring to \ndeliver contextual learning materials, automate assessment processes, and enha nce governance \nthrough real -time analytics.  \n2.1 AI -Generated Localized  Content  \nQuizzo generates CBC -aligned content in English and Kiswahili. Users input any topic, and the \nplatform produces:  \n\uf0b7 Lesson notes  \n\uf0b7 Learning objectives  \n\uf0b7 Explanations and examples  \n\uf0b7 Summa ries and flashcards  \n\uf0b7 Simplified or advanced versions  \n\uf0b7 Age-appropriate, curriculum -aligned content  \nThis ensures equal access to high -quality learning materials for all learners.  \n2.2 Automatic Quiz & Exam Generation  \nThe platform automatically generates:  \n\uf0b7 Multiple -choice questions  \n\uf0b7 Short -answer questions  \n\uf0b7 Problem -solving tasks  \n\uf0b7 Revision papers and practice tests  \nAn AI auto -marking engine evaluates student responses, explains solutions, and gives \npersonalized feedback.  \n2.3 Smart AI Proctoring (Exam Integrity)  \nQuizzo includes an AI -driven proctoring module that uses computer vision and audio analysis to \ndetect:  \n\uf0b7 Multiple faces  \n\uf0b7 Impersonation attempts  \n\n \uf0b7 Unauthorized devices  \n\uf0b7 Abnormal movements  \n\uf0b7 Background noise  \n\uf0b7 Possible collaboration  \nIt automatically generates proctorin g reports, strengthening the credibility of online and in -class \nassessments.  \n2.4 AI Tutor  \nQuizzo features an AI tutor capable of:  \n\uf0b7 Answering questions in English or Kiswahili  \n\uf0b7 Providing step -by-step explanations  \n\uf0b7 Offering adaptive difficulty  \n\uf0b7 Supporting contin uous learning beyond classroom hours  \n2.5 Teacher Dashboard & Analytics  \nTeachers gain access to:  \n\uf0b7 Student performance analytics  \n\uf0b7 Topic mastery heat maps  \n\uf0b7 Learner progress reports  \n\uf0b7 Difficulty trend analysis  \n\uf0b7 Automated lesson planning  \n\uf0b7 Downloadable PDF/CSV reports  \n2.6 School and Policy Dashboard  \nFor school heads, county education offices, and policymakers, Quizzo offers:  \n\uf0b7 Regional performance insights  \n\uf0b7 Learning gaps identification  \n\uf0b7 Curriculum coverage monitoring  \n\uf0b7 Data -driven decision -making tools  \n2.7 Low Bandwidth Optim ization  \nTo support rural areas, the system includes:  \n\uf0b7 Offline access for notes  \n\uf0b7 Local caching  \n\uf0b7 Lightweight user interface  \n\n\n 2.8 Scalability  \nQuizzo supports future integration with:  \n\uf0b7 School MIS (Management Information Systems)  \n\uf0b7 Ministry of Education dashboards  \n\uf0b7 National EdTech initiatives  \n\uf0b7 Mobile learning apps",
+      "char_count": 2572
+    },
+    {
+      "chapter_number": 4,
+      "title": "3. Technology & Methodology",
+      "content": "3.1 AI Technologies  \n\uf0b7 Generative AI (LLMs: Groq, OpenAI, Cohere, Llama models)  \n\uf0b7 Agentic AI (task automation pipelines)  \n\uf0b7 Computer Vision (OpenCV, MediaPipe for proctoring)  \n\uf0b7 NLP (English & Kiswahili processing)  \n\uf0b7 Embedding search for knowledge retrieval  \n3.2 Frameworks & Tools  \n\uf0b7 Backend:  Flask, FastAPI  \n\uf0b7 Frontend:  HTML, Tailwind CSS, JavaScript  \n\uf0b7 Database:  MongoDB / PostgreSQL  \n\uf0b7 AI Pipel ines:  LangChain, HuggingFace  \n\uf0b7 Vector Stores:  TiDB, Pinecone, Chroma  \n\uf0b7 Analytics:  Plotly, Chart.js  \n3.3 Methodologies  \n\uf0b7 Retrieval -Augmented Generation (RAG)  \n\uf0b7 CBC -aligned prompt engineering  \n\uf0b7 Agile development  \n\uf0b7 Data analysis & visualization  \n\uf0b7 Computer vision pipelines f or proctoring",
+      "char_count": 722
+    },
+    {
+      "chapter_number": 5,
+      "title": "4. Relevance to Theme: AI for National",
+      "content": "Prosperity  \nQuizzo aligns directly with the theme  \u201cAI for National Prosperity: Sustainable Development \nand Security.\u201d  \n\n\n\n4.1 Education for National Growth  \nQuizzo enhances learning outcomes, promotes digital literacy, and equips Kenya\u2019s youth with \nfuture -ready skills \u2014all key drivers of economic prosperity.  \n4.2 Contribution to Sustainable Development  \nThe solution supports SDG 4 (Quality Education) by:  \n\uf0b7 Reducing  educational inequality  \n\uf0b7 Providing localized digital content  \n\uf0b7 Supporting rural and low -resource schools  \n\uf0b7 Enhancing teacher effectiveness  \n4.3 Strengthening Governance & Policy  \nThe analytics dashboard provides:  \n\uf0b7 Real-time educational insights  \n\uf0b7 Monitoring of school and county performance  \n\uf0b7 Data -driven policymaking  \n\uf0b7 Transparency and accountability  \n4.4 Enhancing Security through  Exam Integrity  \nSmart AI proctoring combats:  \n\uf0b7 Cheating  \n\uf0b7 Impersonation  \n\uf0b7 Assessment fraud  \nThis enhances the overall credibility of  Kenya\u2019s digital learning systems.",
+      "char_count": 1014
+    },
+    {
+      "chapter_number": 6,
+      "title": "5. Conclusion",
+      "content": "Quizzo is a scalable, AI -powered solution designed to transform Kenya\u2019s education sector \nthrough localized content generation, automated assessments, AI tutoring, analyti cs, and smart \nproctoring. It aligns with national digital transformation goals and directly contributes to \nsustainable development and national prosperity.",
+      "char_count": 331
+    }
+  ],
+  "created_at": "2025-11-16T01:56:41.069787",
+  "status": "completed",
+  "audio_files": [],
+  "current_chapter": 6,
+  "completed_at": "2025-11-16T16:47:24.506010"
+}

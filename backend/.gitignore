@@ -1,0 +1,45 @@
+# .gitignore for Lumino AI Backend
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Test files
+test_audio.*
+test_response.*
+test_roundtrip.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audio files (don't commit user recordings)
+*.mp3
+*.wav
+*.webm
+*.m4a

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth - Lumino AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c93552;
+        }
+        .success { color: #4ecca3; }
+        .error { color: #e94560; }
+        pre {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Lumino AI - Authentication Debug Tool</h1>
+    
+    <div class="section">
+        <h2>Current Authentication Status</h2>
+        <div id="authStatus"></div>
+        <button onclick="checkAuth()">Refresh Status</button>
+        <button onclick="clearAuth()">Clear All Auth Data</button>
+    </div>
+
+    <div class="section">
+        <h2>Stored Token</h2>
+        <pre id="tokenDisplay"></pre>
+    </div>
+
+    <div class="section">
+        <h2>Stored User Data</h2>
+        <pre id="userDisplay"></pre>
+    </div>
+
+    <div class="section">
+        <h2>Quick Actions</h2>
+        <button onclick="goToAuth()">Go to Auth Page</button>
+        <button onclick="goToChat()">Go to Chat</button>
+        <button onclick="goToHome()">Go to Home</button>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            let status = '';
+            if (token && user) {
+                status = '<span class="success">✅ Logged In</span>';
+            } else if (token) {
+                status = '<span class="error">⚠️ Token exists but no user data</span>';
+            } else {
+                status = '<span class="error">❌ Not Logged In</span>';
+            }
+            
+            document.getElementById('authStatus').innerHTML = status;
+            document.getElementById('tokenDisplay').textContent = token || 'No token stored';
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    document.getElementById('userDisplay').textContent = JSON.stringify(userData, null, 2);
+                } catch (e) {
+                    document.getElementById('userDisplay').textContent = 'Invalid user data: ' + user;
+                }
+            } else {
+                document.getElementById('userDisplay').textContent = 'No user data stored';
+            }
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            alert('✅ All authentication data cleared!');
+            checkAuth();
+        }
+
+        function goToAuth() {
+            window.location.href = '/auth';
+        }
+
+        function goToChat() {
+            window.location.href = '/chat';
+        }
+
+        function goToHome() {
+            window.location.href = '/';
+        }
+
+        // Check on load
+        checkAuth();
+    </script>
+</body>
+</html>
