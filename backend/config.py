@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     # Hugging Face Inference API (hosted image generation)
     HF_API_KEY: Optional[str] = None
     HF_IMAGE_MODEL: str = "stabilityai/stable-diffusion-2-1"
+    # Application database (Postgres). When deploying, set to your Neon/Supabase/other DB.
+    DATABASE_URL: str = ""  # e.g. postgres://user:pass@host:5432/dbname
     
     # Google Cloud (if using Google)
     GOOGLE_CLOUD_PROJECT: str = ""
@@ -85,7 +87,8 @@ class Settings(BaseSettings):
     MODEL_CONFIG_PATH: str = "../configs/models.json"
     
     class Config:
-        env_file = ".env"
+        # Ensure the .env file in the backend folder is always used
+        env_file = str(Path(__file__).parent / ".env")
         case_sensitive = True
 
 

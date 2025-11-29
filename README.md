@@ -198,6 +198,48 @@ User → Microphone
     │  │   ┌─────────┐  │  │
     │  │   │   ASR   │  │  │  (Whisper API)
     │  │   └────┬────┘  │  │
+
+## 🔧 Deploying with Neon (Postgres)
+
+This repository supports using a hosted Postgres database such as Neon. To run the backend against Neon:
+
+1. Create a Neon database and copy the connection string. The connection string should look like:
+
+   `postgresql://<user>:<password>@<host>:<port>/<db>`
+
+2. Provide the connection string to the app. Two common options:
+
+   - Use an `.env` file (recommended for local development).
+     - Copy `.env.example` to `.env` and set `DATABASE_URL`.
+
+   - Set the environment variable for the current session:
+
+     - `cmd.exe`:
+
+       ```cmd
+       set DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<db>
+       python backend/main.py
+       ```
+
+     - `PowerShell`:
+
+       ```powershell
+       $env:DATABASE_URL = "postgresql://<user>:<password>@<host>:<port>/<db>"
+       python backend/main.py
+       ```
+
+3. Verify connection and schema:
+
+   - After the backend starts, run the verification script to list tables and counts:
+
+     ```cmd
+     python backend/scripts/verify_neon.py
+     ```
+
+Notes:
+- If you removed local SQLite DB files (the project will not recreate them), the app will require `DATABASE_URL` to be set.
+- Keep your Neon credentials private — do not commit them to Git.
+
     │  │        ↓        │  │
     │  │   ┌─────────┐  │  │
     │  │   │   LLM   │  │  │  (GPT-4 / Claude)

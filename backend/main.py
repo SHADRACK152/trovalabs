@@ -2,11 +2,20 @@
 Lumino AI - Main FastAPI Backend
 Real-time voice chatbot with tone control
 """
+import sys
+from pathlib import Path
+# Ensure repository root is on sys.path so `import backend.*` works when
+# running `python main.py` from the `backend/` directory.
+repo_root = Path(__file__).resolve().parent.parent
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
 import logging
 import io
 import os
 import httpx
 import jwt
+import uuid
 from typing import Optional, List
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -62,8 +71,16 @@ from tts import get_tts_service
 from image_gen import generate_image
 from web_analyzer import analyze_url
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env files.
+# Preference order:
+# 1. repo root `.env` (allows running from workspace root)
+# 2. backend `.env` (local overrides for backend-specific settings)
+root_env = repo_root / ".env"
+backend_env = Path(__file__).parent / ".env"
+if root_env.exists():
+    load_dotenv(root_env)
+# Always load backend `.env` so it can override root values when present
+load_dotenv(backend_env)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -77,6 +94,35 @@ app = FastAPI(
     description="Real-time voice chatbot with ASR → LLM → TTS pipeline",
     version="1.0.0"
 )
+
+# Serve logo and favicon from backend folder
+from fastapi.responses import FileResponse
+
+@app.get("/logo.png", include_in_schema=False)
+def logo_png():
+    """Return project logo image"""
+    # Prefer SVG artwork if present for sharper scaling
+    svg = Path(__file__).parent / "luminologo_art.svg"
+    png = Path(__file__).parent / "luminologo.png"
+    if svg.exists():
+        return FileResponse(svg, media_type="image/svg+xml")
+    if png.exists():
+        return FileResponse(png, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Logo not found")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Return favicon for browsers and Swagger UI"""
+    # Serve a favicon; prefer svg favicon if present, otherwise fall back to PNG
+    svg = Path(__file__).parent / "luminologo_art.svg"
+    ico = Path(__file__).parent / "luminologo.png"
+    if svg.exists():
+        # Some browsers accept SVG as favicon; otherwise frontend still provides PNG favicons
+        return FileResponse(svg, media_type="image/svg+xml")
+    if ico.exists():
+        return FileResponse(ico, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Favicon not found")
 
 # CORS middleware for frontend integration
 app.add_middleware(
@@ -1283,6 +1329,111 @@ async def generate_image_endpoint(req: ImageGenerateRequest):
     except Exception as e:
         logger.exception(f"Image generation failed: {e}")
         raise HTTPException(status_code=503, detail=f"Image generation failed: {e}")
+
+
+# -------------------- Image gallery (server-side) --------------------
+@app.post('/upload-image')
+async def upload_image(
+    file: UploadFile = File(...),
+    user_id: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """Upload an image and persist it under backend/uploads/images/<user_id>
+
+    Accepts a multipart file upload. If `user_id` is not provided, the
+    authenticated user's id will be used. Returns the public URL for the saved image.
+    """
+    try:
+        # Determine owner id
+        owner_id = user_id or (current_user.id if current_user else "public")
+
+        uploads_root = Path(__file__).parent / "uploads" / "images" / owner_id
+        uploads_root.mkdir(parents=True, exist_ok=True)
+
+        # Create a safe, unique filename
+        original_name = Path(file.filename).name
+        ext = original_name.split('.')[-1] if '.' in original_name else 'png'
+        filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex}.{ext}"
+
+        dest = uploads_root / filename
+        # Stream write to avoid loading large files into memory
+        with open(dest, 'wb') as f:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
+
+        url = f"/images/{owner_id}/{filename}"
+        return {"success": True, "url": url, "filename": filename, "owner_id": owner_id}
+
+    except Exception as e:
+        logger.error(f"Error uploading image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/images/{user_id}')
+async def list_user_images(user_id: str):
+    """List images for a given user id"""
+    try:
+        uploads_root = Path(__file__).parent / "uploads" / "images" / user_id
+        if not uploads_root.exists():
+            return {"user_id": user_id, "images": []}
+
+        items = []
+        for p in sorted(uploads_root.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+            if p.is_file():
+                items.append({
+                    "filename": p.name,
+                    "url": f"/images/{user_id}/{p.name}",
+                    "size": p.stat().st_size,
+                    "modified": datetime.fromtimestamp(p.stat().st_mtime).isoformat()
+                })
+
+        return {"user_id": user_id, "images": items}
+
+    except Exception as e:
+        logger.error(f"Error listing images for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/images/{user_id}/{filename}')
+async def serve_user_image(user_id: str, filename: str):
+    """Serve an uploaded image file"""
+    try:
+        p = Path(__file__).parent / "uploads" / "images" / user_id / filename
+        if not p.exists() or not p.is_file():
+            raise HTTPException(status_code=404, detail="Image not found")
+        return FileResponse(p, media_type="image/png")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving image {user_id}/{filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete('/images/{user_id}/{filename}')
+async def delete_user_image(user_id: str, filename: str, current_user: User = Depends(get_current_user)):
+    """Delete an uploaded image. Requires authentication and ownership."""
+    try:
+        # Only allow owner to delete
+        if current_user.id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this image")
+
+        p = Path(__file__).parent / "uploads" / "images" / user_id / filename
+        if not p.exists() or not p.is_file():
+            raise HTTPException(status_code=404, detail="Image not found")
+
+        p.unlink()
+        return {"success": True, "deleted": filename}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting image {user_id}/{filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.post("/voice-roundtrip")

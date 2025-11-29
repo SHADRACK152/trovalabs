@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 
-const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose }) => {
+const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoidServerGeneration = false }) => {
   const [currentChapter, setCurrentChapter] = useState(startChapter);
   const [currentChapterTitle, setCurrentChapterTitle] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -112,7 +112,7 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose }) => {
     loadVoices();
   }, []);
 
-  const [avoidServerGeneration, setAvoidServerGeneration] = useState(props?.forceAvoidServerGeneration || false);
+  const [avoidServerGeneration, setAvoidServerGeneration] = useState(forceAvoidServerGeneration || false);
 
   useEffect(() => {
     // If user opted to avoid server generation, enforce browser playback regardless of voice chosen

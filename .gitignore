@@ -31,3 +31,9 @@ desktop.ini
 # Misc
 *.egg-info/
 pip-wheel-metadata/
+
+# Local database files
+database/*.db
+database/*.db.bak
+backend/database/*.db
+backend/database/*.db.bak

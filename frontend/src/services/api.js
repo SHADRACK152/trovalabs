@@ -165,6 +165,38 @@ export const luminoAPI = {
   },
 
   /**
+   * Voice roundtrip with explicit voice selection
+   */
+  async voiceRoundtripWithVoice(audioBlob, tone = 'neutral', language = 'en', userId = null, voice = null) {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
+    formData.append('tone', tone);
+    formData.append('language', language);
+    if (userId) formData.append('user_id', userId);
+    if (voice) formData.append('voice', voice);
+
+    const response = await api.post('/voice-roundtrip', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      responseType: 'blob',
+      timeout: 300000,
+    });
+
+    return response.data ? {
+      audio: response.data,
+      userText: response.headers['x-user-text'] || null,
+      responseText: response.headers['x-response-text'] || null
+    } : null;
+  },
+
+  /**
+   * Get available TTS voices from backend
+   */
+  async getVoices() {
+    const response = await api.get('/voices');
+    return response.data;
+  },
+
+  /**
    * Generate smart title for conversation
    */
   async generateTitle(userMessage, aiResponse = null, conversationContext = null) {
@@ -213,6 +245,36 @@ export const luminoAPI = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+
+  /**
+   * Upload an image to the server-side gallery (persists under uploads/images/<user_id>)
+   */
+  async uploadImage(imageFile, userId = null) {
+    const formData = new FormData();
+    formData.append('file', imageFile, imageFile.name || 'upload.png');
+    if (userId) formData.append('user_id', userId);
+
+    const response = await api.post('/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000,
+    });
+    return response.data;
+  },
+
+  /**
+   * List images for a user from the server-side gallery
+   */
+  async listUserImages(userId) {
+    const response = await api.get(`/images/${encodeURIComponent(userId)}`);
+    return response.data;
+  },
+  /**
+   * Delete a user image on the server
+   */
+  async deleteUserImage(userId, filename) {
+    const response = await api.delete(`/images/${encodeURIComponent(userId)}/${encodeURIComponent(filename)}`);
     return response.data;
   },
 

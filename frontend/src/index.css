@@ -50,11 +50,72 @@
   }
 
   .message-user {
-    @apply bg-blue-800/40 backdrop-blur-sm rounded-2xl p-4 ml-auto max-w-2xl;
+    @apply bg-blue-800/40 backdrop-blur-sm rounded-2xl p-4 ml-auto max-w-2xl relative;
   }
 
   .message-assistant {
-    @apply bg-slate-800/60 backdrop-blur-sm rounded-2xl p-4 mr-auto max-w-2xl;
+    @apply bg-slate-800/60 backdrop-blur-sm rounded-2xl p-4 mr-auto max-w-2xl relative;
+  }
+
+  .message-avatar {
+    @apply w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center text-xs font-bold mr-3;
+  }
+
+  .message-meta {
+    @apply text-xs text-blue-400/60 mt-2 flex items-center gap-2;
+  }
+
+  .message-content {
+    @apply text-sm leading-relaxed;
+  }
+
+  .message-actions {
+    @apply absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition flex gap-2;
+  }
+
+  .message-action-btn {
+    @apply bg-slate-800/30 p-1 rounded-md hover:bg-slate-800/50 text-xs;
+  }
+
+  .sample-prompts {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4;
+  }
+
+  .sidebar-overlay {
+    @apply fixed inset-0 bg-black/50 z-30 sm:hidden;
+  }
+
+  /* Typing suggestions dropdown */
+  .typing-suggestions {
+    @apply bg-slate-900 border border-blue-800/40 rounded-lg shadow-lg overflow-hidden;
+  }
+
+  .typing-suggestion-item {
+    @apply px-3 py-2 text-sm text-white hover:bg-slate-800/60 cursor-pointer;
+  }
+
+  .typing-suggestion-active {
+    @apply bg-blue-700/60;
+  }
+
+  /* place suggestions above or below depending on available space */
+  .typing-suggestions.above {
+    top: auto; /* clear top */
+    bottom: calc(100% + 0.5rem);
+  }
+
+  .typing-suggestions.below {
+    top: calc(100% + 0.5rem);
+    bottom: auto;
+  }
+
+  /* Gallery styles */
+  .gallery-modal img {
+    @apply w-full h-40 object-cover;
+  }
+
+  .gallery-grid {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3;
   }
 }
 
