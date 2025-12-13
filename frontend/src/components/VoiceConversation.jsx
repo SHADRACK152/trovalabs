@@ -39,6 +39,9 @@ export default function VoiceConversationSimple() {
   const [naturalVoicesError, setNaturalVoicesError] = useState(null);
   const [naturalVoicesLoading, setNaturalVoicesLoading] = useState(true);
   const [selectedNaturalVoice, setSelectedNaturalVoice] = useState('lisa');
+  const [naturalDropdownOpen, setNaturalDropdownOpen] = useState(false);
+  const [selectedRate, setSelectedRate] = useState(1.0);
+  const [selectedPitch, setSelectedPitch] = useState(1.0);
   const [hasInteracted, setHasInteracted] = useState(false);
   
   // Voice cloning states
@@ -767,7 +770,7 @@ export default function VoiceConversationSimple() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -792,272 +795,171 @@ export default function VoiceConversationSimple() {
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto">
-          {/* Voice Cloning Section */}
-          <div className="mb-4 flex justify-center items-center gap-4 flex-wrap">
-            <button
-              onClick={() => setShowVoiceClone(!showVoiceClone)}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105"
-            >
-              🎤 Clone My Voice
-            </button>
-            
-            {hasClonedVoice && (
-              <label className="text-white flex items-center gap-2 cursor-pointer bg-white/10 px-4 py-3 rounded-lg backdrop-blur-sm">
-                <input
-                  type="checkbox"
-                  checked={useClonedVoice}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    console.log('🔊 Cloned voice toggle changed to:', checked);
-                    setUseClonedVoice(checked);
-                    if (checked) {
-                      console.log('Disabling natural voice...');
-                      setUseNaturalVoice(false);
-                    }
-                  }}
-                  className="w-5 h-5"
-                />
-                <span className="text-lg font-medium">🔊 Use My Cloned Voice</span>
-              </label>
-            )}
-          </div>
+          {/* Modern Voice Conversation UI */}
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            {/* Left: Controls */}
+            <div className="col-span-1">
+              <div className="bg-white/5 p-4 rounded-xl mb-4 voice-controls-panel">
+                <div className="text-sm text-white/80 mb-2">Voice Mode</div>
+                <div className="flex flex-col gap-2">
+                  {/* Natural voice dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setNaturalDropdownOpen(prev => !prev)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded bg-white/5 text-white/90"
+                      aria-expanded={naturalDropdownOpen}
+                      aria-haspopup="listbox"
+                    >
+                      <span className="text-sm">
+                        {useNaturalVoice ? `Natural: ${selectedNaturalVoice}` : 'Use Natural Voice'}
+                      </span>
+                      <svg className={`w-4 h-4 ml-2 transform ${naturalDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                      </svg>
+                    </button>
 
-          {/* Voice Clone Modal */}
-          {showVoiceClone && (
-            <div className="mb-6 bg-white/10 backdrop-blur-lg rounded-xl p-6">
-              <h3 className="text-white text-xl font-bold mb-4 text-center">Clone Your Voice</h3>
-              <p className="text-white/80 text-center mb-4">
-                Record 5-10 seconds of your voice. Speak clearly and naturally.
-              </p>
-              
-              <div className="flex flex-col items-center gap-4">
-                {!isRecordingClone && !isCloning && (
-                  <button
-                    onClick={startCloneRecording}
-                    className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-lg font-semibold transition-all"
-                  >
-                    🎤 Start Recording Sample
-                  </button>
-                )}
-                
-                {isRecordingClone && (
-                  <button
-                    onClick={stopCloneRecording}
-                    className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-lg font-semibold animate-pulse"
-                  >
-                    ⏹️ Stop Recording
-                  </button>
-                )}
-                
-                {isCloning && (
-                  <div className="w-full max-w-md">
-                    <div className="bg-white/20 rounded-full h-3 overflow-hidden mb-2">
-                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full animate-pulse" 
-                           style={{width: '100%'}}></div>
+                    {naturalDropdownOpen && (
+                      <div className="mt-2 bg-white/5 rounded shadow-lg z-20 max-h-56 overflow-auto">
+                        {naturalVoicesLoading ? (
+                          <div className="px-3 py-2 text-sm text-white/60">Loading voices…</div>
+                        ) : naturalVoices.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-white/60">No natural voices available</div>
+                        ) : (
+                          naturalVoices.map(nv => (
+                            <button
+                              key={nv.name}
+                              onClick={() => {
+                                setSelectedNaturalVoice(nv.name);
+                                setUseNaturalVoice(true);
+                                setUseClonedVoice(false);
+                                setNaturalDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm ${selectedNaturalVoice === nv.name ? 'bg-blue-600 text-white' : 'text-white/90 hover:bg-white/5'}`}
+                            >
+                              {nv.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {hasClonedVoice && (
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={useClonedVoice} onChange={(e) => { setUseClonedVoice(e.target.checked); if (e.target.checked) setUseNaturalVoice(false); }} className="w-4 h-4" />
+                      <span className="text-white text-sm">Use My Cloned Voice</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-xl mb-4">
+                <div className="text-sm text-white/80 mb-2">Voice Selection</div>
+                {!useNaturalVoice && !useClonedVoice ? (
+                  <div className="flex flex-col gap-2">
+                    {availableVoices.slice(0,6).map((v) => (
+                      <button key={v.id} onClick={() => setSelectedVoice(v)} className={`text-left px-3 py-2 rounded ${selectedVoice?.id === v.id ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/80'}`}>
+                        {v.name || v.id}
+                      </button>
+                    ))}
+                  </div>
+                ) : useNaturalVoice ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="px-3 py-2 rounded bg-white/5 text-white/90 flex items-center justify-between">
+                      <div className="text-sm">{selectedNaturalVoice}</div>
+                      <button onClick={() => setNaturalDropdownOpen(true)} className="text-sm text-blue-200 hover:underline">Change</button>
                     </div>
                   </div>
+                ) : (
+                  <div className="text-white/80">Using cloned voice</div>
                 )}
-                
-                {cloneStatus && (
-                  <div className={`text-center text-lg font-medium px-6 py-3 rounded-lg ${
-                    cloneStatus.includes('✅') ? 'bg-green-500/20 text-green-200' :
-                    cloneStatus.includes('❌') ? 'bg-red-500/20 text-red-200' :
-                    'bg-blue-500/20 text-blue-200'
-                  }`}>
-                    {cloneStatus}
-                  </div>
-                )}
-                
-                <div className="text-white/60 text-sm text-center mt-2">
-                  <p>💡 Tip: Say something like:</p>
-                  <p className="italic">"Hello, this is my voice. I'm creating a voice clone for my AI assistant."</p>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-xl">
+                <div className="text-sm text-white/80 mb-2">Playback</div>
+                <div className="text-xs text-white/70 mb-2">Speed: {selectedRate.toFixed(2)}</div>
+                <input type="range" min="0.6" max="1.6" step="0.05" value={selectedRate} onChange={(e) => setSelectedRate(parseFloat(e.target.value))} />
+                <div className="text-xs text-white/70 mt-3 mb-2">Pitch: {selectedPitch.toFixed(2)}</div>
+                <input type="range" min="0.6" max="1.8" step="0.05" value={selectedPitch} onChange={(e) => setSelectedPitch(parseFloat(e.target.value))} />
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => {
+                    try {
+                      const synth = window.speechSynthesis;
+                      if (!synth) return alert('SpeechSynthesis not available');
+                      const utter = new SpeechSynthesisUtterance('This is a preview from Lumino.');
+                      utter.rate = selectedRate;
+                      utter.pitch = selectedPitch;
+                      const voices = synth.getVoices();
+                      const found = voices.find(x => selectedVoice && (x.name || '').toLowerCase().includes((selectedVoice.name || selectedVoice.id || '').toLowerCase()));
+                      if (found) utter.voice = found;
+                      synth.cancel(); synth.speak(utter);
+                    } catch (e) { console.warn(e); }
+                  }} className="px-3 py-2 rounded bg-blue-600">Preview</button>
+                  <button onClick={() => { setSelectedRate(1.0); setSelectedPitch(1.0); }} className="px-3 py-2 rounded bg-white/5">Reset</button>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Natural Voice Toggle */}
-          {!useClonedVoice && (
-            <div className="mb-4 flex justify-center items-center gap-4">
-              <label className="text-white flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useNaturalVoice}
-                  disabled={naturalVoicesLoading}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    console.log('🎭 Natural voice toggle changed to:', checked);
-                    setUseNaturalVoice(checked);
-                    if (checked) {
-                      console.log('Disabling cloned voice...');
-                      setUseClonedVoice(false);
-                    }
-                  }}
-                  className="w-5 h-5"
-                />
-                <span className="text-lg font-medium">🎭 Use FREE Natural Voices (More Human)</span>
-                {naturalVoicesLoading && (
-                  <span className="ml-2 text-sm opacity-80 text-yellow-300">Loading voices…</span>
-                )}
-              </label>
-            </div>
-          )}
+            {/* Center: Big Lumino talking circle */}
+            <div className="col-span-1 md:col-span-1 flex flex-col items-center justify-center">
+              <div className={`stage ${isSpeaking ? 'stage-speaking' : ''}`}>
+                <img src="/assets/lumai.png" alt="Lumino" className="stage-logo w-56 h-56" />
+              </div>
 
-          {/* Natural Voice Selector - Only shown if enabled */}
-          {useNaturalVoice && naturalVoices.length > 0 && (
-            <div className="mb-4">
-              <label className="block text-white text-center mb-2 text-sm font-medium">
-                Choose Natural AI Voice (FREE)
-              </label>
-              <div className="flex justify-center gap-2 flex-wrap">
-                {naturalVoices.map((voice) => (
-                  <button
-                    key={voice.name}
-                    onClick={() => setSelectedNaturalVoice(voice.name)}
-                    className={`px-4 py-2 rounded-lg text-sm transition-all ${
-                      selectedNaturalVoice === voice.name
-                        ? 'bg-green-600 text-white scale-105'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {voice.gender === 'female' ? '👩' : '👨'} {voice.name.charAt(0).toUpperCase() + voice.name.slice(1)}
-                    <span className="block text-xs opacity-75">{voice.description}</span>
+              <div className="mt-4 text-center">
+                <div className="text-2xl font-extrabold text-white">Lumino AI</div>
+                <div className="mt-2 text-sm text-white/90">{isRecording ? 'Listening…' : isSpeaking ? 'Speaking…' : 'Ready'}</div>
+              </div>
+
+              <div className="mt-6 flex items-center gap-4">
+                <div className="flex items-center">
+                  <button onClick={isRecording ? stopRecording : startRecording} className={`record-btn ${isRecording ? 'recording' : ''}`} title="Record">
+                    {!isRecording ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="mic-icon">
+                        <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z" />
+                        <path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 5 5 0 0 0 4 4.9V19H7a1 1 0 1 0 0 2h10a1 1 0 1 0 0-2h-2v-3.1A5 5 0 0 0 19 11z" />
+                      </svg>
+                    ) : (
+                      '■'
+                    )}
                   </button>
-                ))}
+
+                  <div className="vu-meter">
+                    {[12,18,24,30,36].map((h, i) => (
+                      <div key={i} className="audio-bar" style={{ height: `${h}px`, width: 4 }} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-start">
+                  <button onClick={interrupt} className="px-3 py-2 rounded bg-blue-700 text-white">Interrupt</button>
+                  <div className="text-xs text-white/70 mt-2">{currentTranscript ? currentTranscript.slice(0,120) + (currentTranscript.length>120 ? '...' : '') : 'Speak to start a conversation.'}</div>
+                </div>
               </div>
             </div>
-          )}
 
-          {useNaturalVoice && naturalVoices.length === 0 && (
-            <div className="mb-4 text-center text-yellow-300">
-              {naturalVoicesError ? (
-                <>
-                  <div className="font-medium">Free Voices Not Available</div>
-                  <div className="text-sm opacity-80">{naturalVoicesError}</div>
-                  <div className="text-sm mt-1">Please try again later or check the server.</div>
-                  <div className="mt-2">
-                    <button
-                      onClick={() => loadNaturalVoices()}
-                      className="px-3 py-1 bg-white/10 rounded-lg text-xs text-white/80 hover:bg-white/20"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-sm opacity-80">No natural voices available right now.</div>
-              )}
-            </div>
-          )}
-
-          {/* Browser Voice Selector - Only shown if not using natural voices or cloned voice */}
-          {!useNaturalVoice && !useClonedVoice && (
-            <div className="mb-4">
-              <label className="block text-white text-center mb-2 text-sm font-medium">
-                Choose Browser Voice
-              </label>
-              <div className="flex justify-center gap-2 flex-wrap">
-                {availableVoices.map((voiceOption, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedVoice(voiceOption)}
-                    className={`px-4 py-2 rounded-lg text-sm transition-all ${
-                      selectedVoice?.voice.name === voiceOption.voice.name
-                        ? 'bg-pink-600 text-white scale-105'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {voiceOption.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tone Selector */}
-          <div className="mb-6 flex justify-center gap-4">
-            {['calm', 'neutral', 'energetic'].map((tone) => (
-              <button
-                key={tone}
-                onClick={() => setSelectedTone(tone)}
-                className={`px-6 py-3 rounded-lg capitalize transition-all ${
-                  selectedTone === tone
-                    ? 'bg-purple-600 text-white scale-105'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
-              >
-                {tone}
-              </button>
-            ))}
-          </div>
-
-          {/* Status Display */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 mb-6">
-            <div className="text-center">
-              {!hasInteracted ? (
-                <button
-                  onClick={startConversation}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl text-xl font-semibold transition-all transform hover:scale-105"
-                >
-                  🎙️ Start Conversation
-                </button>
-              ) : (
-                <>
-                  <div className="mb-4">
-                    {isRecording && (
-                      <div className="inline-block w-4 h-4 bg-red-500 rounded-full animate-pulse mr-2" />
-                    )}
-                    {isSpeaking && (
-                      <div className="inline-block w-4 h-4 bg-blue-500 rounded-full animate-pulse mr-2" />
-                    )}
-                    <span className="text-xl text-white">
-                      {isRecording ? '🎤 Recording...' : isSpeaking ? '🗣️ Speaking...' : '⏸️ Paused'}
-                    </span>
-                  </div>
-
-                  <div className="text-2xl text-white/90 min-h-[60px] mb-6">
-                    {currentTranscript || 'Ready to talk...'}
-                  </div>
-
-                  {isSpeaking && (
-                    <button
-                      onClick={interrupt}
-                      className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
-                    >
-                      ✋ Interrupt
-                    </button>
+            {/* Right: small transcript / history */}
+            <div className="col-span-1">
+              <div className="bg-white/5 p-4 rounded-xl mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-white/80">Conversation</div>
+                  <button onClick={() => { setTranscriptHistory([]); }} className="text-xs text-white/60">Clear</button>
+                </div>
+                <div className="max-h-64 overflow-auto text-white/80 text-sm">
+                  {transcriptHistory.length === 0 ? (<div className="text-white/50">No messages yet</div>) : (
+                    transcriptHistory.slice().reverse().map((t, i) => (
+                      <div key={i} className={`transcript-entry ${t.role==='user' ? 'bg-purple-600/10' : 'bg-blue-600/10'}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs opacity-80">{t.role === 'user' ? 'You' : 'Lumino'}</div>
+                          <div className="transcript-time">{t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : ''}</div>
+                        </div>
+                        <div className="text-sm mt-1">{t.text}</div>
+                      </div>
+                    ))
                   )}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Conversation History */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 max-h-96 overflow-y-auto">
-            <h2 className="text-xl font-semibold text-white mb-4">Conversation</h2>
-            {transcriptHistory.length === 0 ? (
-              <p className="text-white/50 text-center py-8">
-                Start speaking to begin the conversation...
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {transcriptHistory.map((entry, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-lg ${
-                      entry.role === 'user'
-                        ? 'bg-purple-600/30 ml-8'
-                        : 'bg-blue-600/30 mr-8'
-                    }`}
-                  >
-                    <div className="text-white/70 text-sm mb-1">
-                      {entry.role === 'user' ? '👤 You' : '🤖 Lumino'}
-                    </div>
-                    <div className="text-white">{entry.text}</div>
-                  </div>
-                ))}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

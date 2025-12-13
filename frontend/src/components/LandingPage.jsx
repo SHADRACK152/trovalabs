@@ -177,8 +177,8 @@ const LandingPage = () => {
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-lg opacity-75"></div>
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl overflow-hidden">
-                <img src="/assets/luminologo_art.svg" alt="Lumino logo" className="w-10 h-10 object-contain" />
+                <div className="relative w-14 h-14 flex items-center justify-center overflow-hidden">
+                <img src="/assets/lumai.png" alt="Lumino logo" className="w-14 h-14 object-contain" />
               </div>
             </div>
             <span className="text-white font-bold text-2xl">Lumino AI</span>
@@ -227,14 +227,14 @@ const LandingPage = () => {
             <div className="flex items-center justify-center mb-10">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-3xl opacity-60 animate-pulse"></div>
-                <div className="relative w-32 h-32 rounded-3xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl shadow-purple-500/50 overflow-hidden">
-                  <img src="/assets/luminologo_art.svg" alt="Lumino logo" className="w-20 h-20 object-contain" />
-                </div>
+                  <div className="relative w-32 h-32 flex items-center justify-center overflow-hidden">
+                    <img src="/assets/lumai.png" alt="Lumino logo" className="w-28 h-28 object-contain" />
+                  </div>
               </div>
             </div>
             
             {/* Title with Gradient and Shadow */}
-            <h1 className="text-8xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-2xl">
+            <h1 className="logo-heading text-8xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-2xl">
               Lumino AI
             </h1>
             

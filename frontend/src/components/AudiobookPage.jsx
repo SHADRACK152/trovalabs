@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { BookOpen, Plus, Library, Sparkles, Upload, Music, Headphones, Home, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { BookOpen, Plus, Library, Sparkles, Upload, Music, Headphones, Home, ArrowLeft, CheckCircle, Loader, AlertCircle, Users, Layers, Settings, ChevronDown } from 'lucide-react';
+import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import AudiobookUploader from './AudiobookUploader';
 import AudiobookLibrary from './AudiobookLibrary';
@@ -12,6 +13,70 @@ const AudiobookPage = () => {
   const [selectedAudiobook, setSelectedAudiobook] = useState(null);
   const [showPlayer, setShowPlayer] = useState(false);
   const [showDetailView, setShowDetailView] = useState(false);
+  const [summary, setSummary] = useState({ total: 0, processing: 0, completed: 0, processingList: [] });
+  const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef(null);
+  const settingsBtnRef = useRef(null);
+  const seriesBtnRef = useRef(null);
+  const collectionsBtnRef = useRef(null);
+  const authorsBtnRef = useRef(null);
+  const narratorsBtnRef = useRef(null);
+  const prefsBtnRef = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadSummary = async () => {
+      try {
+        const resp = await api.get('/audiobook/library');
+        const audiobooks = resp.data.audiobooks || [];
+        const total = audiobooks.length;
+        const processingList = audiobooks.filter(ab => ab.status === 'processing');
+        const processing = processingList.length;
+        const completed = audiobooks.filter(ab => ab.status === 'completed').length;
+
+        if (mounted) {
+          setSummary({ total, processing, completed, processingList });
+        }
+      } catch (err) {
+        // ignore summary errors silently
+        console.error('Failed to load audiobook summary', err);
+      }
+    };
+
+    loadSummary();
+    const interval = setInterval(loadSummary, 5000);
+    // click-outside / Escape for settings dropdown
+    const onDocClick = (e) => {
+      if (settingsRef.current && settingsBtnRef.current) {
+        if (!settingsRef.current.contains(e.target) && !settingsBtnRef.current.contains(e.target)) {
+          setShowSettings(false);
+        }
+      }
+    };
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') setShowSettings(false);
+    };
+
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      document.removeEventListener('click', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, []);
+
+  // when settings open, focus first item; simple focus trap inside menu
+  useEffect(() => {
+    if (showSettings) {
+      // focus first button
+      setTimeout(() => {
+        if (seriesBtnRef.current) seriesBtnRef.current.focus();
+      }, 0);
+    }
+  }, [showSettings]);
 
   const handleUploadSuccess = (audiobook) => {
     setActiveTab('library');
@@ -62,11 +127,11 @@ const AudiobookPage = () => {
       </div>
 
       {/* Glassmorphism Header */}
-      <div className="w-full p-6 relative z-10">
-        <div className="max-w-7xl mx-auto bg-white/5 backdrop-blur-xl rounded-2xl px-6 py-4 border border-white/10 shadow-2xl shadow-purple-500/20">
+      <div className="w-full p-4 relative z-10">
+        <div className="max-w-7xl mx-auto bg-white/5 backdrop-blur-xl rounded-2xl px-4 py-3 border border-white/10 shadow-2xl shadow-purple-500/20">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/')}
                 className="group relative p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-400/50 transition-all duration-300"
@@ -77,74 +142,164 @@ const AudiobookPage = () => {
               
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-75"></div>
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-purple-500 flex items-center justify-center shadow-2xl">
-                  <BookOpen className="w-7 h-7 text-white" />
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-purple-500 flex items-center justify-center shadow-2xl">
+                  <BookOpen className="w-6 h-6 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                   Audiobook Studio
                 </h1>
-                <p className="text-sm text-purple-300/80">Transform text into voice</p>
+                <p className="text-xs text-purple-300/80">Transform text into voice</p>
               </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex gap-3">
+            {/* Tab Navigation (compact) */}
+            <div className="flex gap-2 items-center">
               <button
                 onClick={() => setActiveTab('library')}
-                className={`group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 overflow-hidden ${
-                  activeTab === 'library'
-                    ? 'text-white'
-                    : 'text-purple-300 hover:text-white'
+                className={`group relative px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 overflow-hidden ${
+                  activeTab === 'library' ? 'text-white' : 'text-purple-300 hover:text-white'
                 }`}
+                title="My Library"
               >
                 {activeTab === 'library' && (
                   <>
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 blur-xl opacity-75"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"></div>
                   </>
                 )}
                 <span className="relative z-10 flex items-center gap-2">
-                  <Library className="w-5 h-5" />
-                  My Library
+                  <Library className="w-4 h-4" />
+                  <span className="hidden sm:inline">My Library</span>
                 </span>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab('upload')}
-                className={`group relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 overflow-hidden ${
-                  activeTab === 'upload'
-                    ? 'text-white'
-                    : 'text-purple-300 hover:text-white'
+                className={`group relative px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 overflow-hidden ${
+                  activeTab === 'upload' ? 'text-white' : 'text-purple-300 hover:text-white'
                 }`}
+                title="Upload New"
               >
                 {activeTab === 'upload' && (
                   <>
-                    <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 blur-xl opacity-75"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 rounded-lg"></div>
                   </>
                 )}
                 <span className="relative z-10 flex items-center gap-2">
-                  <Upload className="w-5 h-5" />
-                  Upload New
+                  <Upload className="w-4 h-4" />
+                  <span className="hidden sm:inline">Upload</span>
                 </span>
               </button>
+            </div>
+
+            {/* Icon features removed from top bar; accessible via Settings only */}
+
+            {/* Settings dropdown toggle */}
+            <div className="relative ml-2">
+              <button
+                ref={settingsBtnRef}
+                onClick={() => setShowSettings(s => !s)}
+                title="Settings"
+                className="p-2 rounded-md bg-white/3 hover:bg-white/10 text-purple-200 flex items-center gap-1"
+                aria-haspopup="true"
+                aria-expanded={showSettings}
+              >
+                <Settings className="w-4 h-4" />
+                <ChevronDown className="w-3 h-3" />
+              </button>
+
+              {showSettings && (
+                <div
+                  ref={settingsRef}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  role="menu"
+                  aria-label="Audiobook settings"
+                  onKeyDown={(e) => {
+                    // basic focus trap: if Tab from last, go to first; if Shift+Tab from first, go to last
+                    const focusable = [seriesBtnRef.current, collectionsBtnRef.current, authorsBtnRef.current, narratorsBtnRef.current, prefsBtnRef.current].filter(Boolean);
+                    if (e.key === 'Tab' && focusable.length) {
+                      const first = focusable[0];
+                      const last = focusable[focusable.length - 1];
+                      if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                      } else if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                      }
+                    }
+                    if (e.key === 'Escape') setShowSettings(false);
+                  }}
+                  className="absolute right-0 mt-2 w-56 rounded-lg bg-white/5 backdrop-blur-md border border-white/10 shadow-lg z-20 overflow-hidden"
+                >
+                  <div className="flex flex-col py-1">
+                    <button ref={seriesBtnRef} role="menuitem" aria-label="Series" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setShowSettings(false); navigate('/audiobooks/series'); }} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-white/6 text-sm text-white/90">
+                      <span className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-purple-200" /><span>Series</span></span>
+                      <CheckCircle className="w-4 h-4 text-green-300" />
+                    </button>
+
+                    <button ref={collectionsBtnRef} role="menuitem" aria-label="Collections" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setShowSettings(false); console.log('Settings: Collections clicked'); setTimeout(() => navigate('/audiobooks/collections'), 10); }} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-white/6 text-sm text-white/90">
+                      <span className="flex items-center gap-2"><Layers className="w-4 h-4 text-purple-200" /><span>Collections</span></span>
+                      <CheckCircle className="w-4 h-4 text-green-300" />
+                    </button>
+
+                    <button ref={authorsBtnRef} role="menuitem" aria-label="Authors" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setShowSettings(false); console.log('Settings: Authors clicked'); setTimeout(() => navigate('/audiobooks/authors'), 10); }} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-white/6 text-sm text-white/90">
+                      <span className="flex items-center gap-2"><Users className="w-4 h-4 text-purple-200" /><span>Authors</span></span>
+                      <CheckCircle className="w-4 h-4 text-green-300" />
+                    </button>
+
+                    <button ref={narratorsBtnRef} role="menuitem" aria-label="Narrators" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setShowSettings(false); console.log('Settings: Narrators clicked'); setTimeout(() => navigate('/audiobooks/narrators'), 10); }} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-white/6 text-sm text-white/90">
+                      <span className="flex items-center gap-2"><Headphones className="w-4 h-4 text-purple-200" /><span>Narrators</span></span>
+                      <CheckCircle className="w-4 h-4 text-green-300" />
+                    </button>
+
+                    <div className="border-t border-white/5 mt-1" />
+                    <button ref={prefsBtnRef} role="menuitem" aria-label="Preferences" onMouseDown={(e) => e.stopPropagation()} onClick={() => { setShowSettings(false); console.log('Settings: Preferences clicked'); setTimeout(() => navigate('/audiobooks/preferences'), 10); }} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-white/6 text-sm text-white/90">
+                      <span className="flex items-center gap-2"><Settings className="w-4 h-4 text-purple-200" /><span>Preferences</span></span>
+                      <CheckCircle className="w-4 h-4 text-green-300" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Compact summary badges on the right (fit into the same bar) */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white/3 px-2 py-1 rounded-md text-xs text-white/90">
+                <Music className="w-4 h-4 text-purple-200" />
+                <span className="font-medium">{summary.total}</span>
+                <span className="text-[10px] text-purple-200/70 ml-1 hidden sm:inline">total</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-white/3 px-2 py-1 rounded-md text-xs text-white/90">
+                <Loader className="w-4 h-4 text-yellow-300 animate-spin" />
+                <span className="font-medium">{summary.processing}</span>
+                <span className="text-[10px] text-yellow-200/70 ml-1 hidden sm:inline">processing</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-white/3 px-2 py-1 rounded-md text-xs text-white/90">
+                <CheckCircle className="w-4 h-4 text-green-300" />
+                <span className="font-medium">{summary.completed}</span>
+                <span className="text-[10px] text-green-200/70 ml-1 hidden sm:inline">ready</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 relative z-10 px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 relative z-10 px-4 sm:px-6 lg:px-8 py-6">
         <div className="max-w-7xl mx-auto">
-          {activeTab === 'library' && (
-            <AudiobookLibrary onSelectAudiobook={handleSelectAudiobook} />
-          )}
+          <div>
+            {activeTab === 'library' && (
+              <AudiobookLibrary onSelectAudiobook={handleSelectAudiobook} />
+            )}
 
-          {activeTab === 'upload' && (
-            <AudiobookUploader onUploadSuccess={handleUploadSuccess} />
-          )}
+            {activeTab === 'upload' && (
+              <AudiobookUploader onUploadSuccess={handleUploadSuccess} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -156,60 +311,7 @@ const AudiobookPage = () => {
         />
       )}
 
-      {/* Feature Cards Section */}
-      <div className="relative z-10 px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Feature 1 */}
-            <div className="group bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-purple-400/50 transition-all shadow-xl hover:shadow-purple-500/50 hover:scale-105 duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center mb-4 shadow-lg shadow-purple-500/50 group-hover:scale-110 transition-transform">
-                  <Upload className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
-                  Upload Any Format
-                </h3>
-                <p className="text-purple-200/80 text-sm leading-relaxed">
-                  Support for PDF, TXT, EPUB, and DOCX files up to 50MB
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="group bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-pink-400/50 transition-all shadow-xl hover:shadow-pink-500/50 hover:scale-105 duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-pink-700 flex items-center justify-center mb-4 shadow-lg shadow-pink-500/50 group-hover:scale-110 transition-transform">
-                  <Music className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-pink-400 transition-colors">
-                  AI-Powered Voices
-                </h3>
-                <p className="text-pink-200/80 text-sm leading-relaxed">
-                  Natural-sounding narration with multiple voice options
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="group bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-blue-400/50 transition-all shadow-xl hover:shadow-blue-500/50 hover:scale-105 duration-300">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/50 group-hover:scale-110 transition-transform">
-                  <Headphones className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
-                  Listen Anywhere
-                </h3>
-                <p className="text-blue-200/80 text-sm leading-relaxed">
-                  Record chapters as you listen and share with friends
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Feature Cards moved to top navigation - removed duplicate section */}
     </div>
   );
 };

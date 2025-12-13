@@ -11,7 +11,8 @@ import {
   SkipBack,
   Circle,
   Download,
-  Settings
+  Settings,
+  RotateCcw
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -36,9 +37,13 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
   const [availableVoices, setAvailableVoices] = useState([]);
   const [speechRate, setSpeechRate] = useState(1.0);
   const [speechPitch, setSpeechPitch] = useState(1.0);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [showFullChapter, setShowFullChapter] = useState(false);
 
   const utteranceRef = useRef(null);
   const speechSynthesisRef = useRef(window.speechSynthesis);
+  // Incrementing session id to prevent overlapping speakChapter runs
+  const speakSessionRef = useRef(0);
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
   const destinationRef = useRef(null);
@@ -136,6 +141,19 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
       }
     } catch (e) {}
   }, [readingPosition]);
+
+  // Grid class reactive to orientation
+  const gridColsClass = isPortrait ? 'grid grid-cols-1 gap-6' : 'grid grid-cols-1 md:grid-cols-3 gap-6';
+  // Layout classes for portrait vs landscape
+  const layoutClass = isPortrait ? 'grid grid-cols-1 gap-6' : 'flex flex-row gap-6 items-stretch';
+  const leftColClass = isPortrait ? 'md:col-span-2' : 'flex-1 flex flex-col';
+  // Limit right column width so it doesn't consume too much horizontal space
+  const rightColClass = isPortrait ? 'md:col-span-1' : 'w-1/3 max-w-xs flex-shrink-0 flex flex-col justify-between';
+  // Use a moderate max width and center the panel; lower min-height so it doesn't overflow smaller viewports
+  // Cap the panel height to viewport so it stays centered; inner content will scroll
+  const panelClass = isPortrait
+    ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full mx-auto border border-purple-500/20 overflow-hidden max-h-[calc(100vh-6rem)]'
+    : 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl shadow-2xl max-w-4xl w-full mx-auto min-h-[12rem] md:min-h-[16rem] border border-purple-500/20 overflow-hidden max-h-[calc(100vh-6rem)]';
 
   // When selectedVoice changes during playback, restart the playback in the new voice
   useEffect(() => {
@@ -455,8 +473,10 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
   };
 
   const speakChapter = (text, startChunk = 0) => {
-    // Stop any current speech
-    speechSynthesisRef.current.cancel();
+    // Stop any current speech and bump the speak session id so previous promises abort
+    speakSessionRef.current += 1;
+    const session = speakSessionRef.current;
+    try { speechSynthesisRef.current.cancel(); } catch (e) {}
     
     // Split text into chunks (speech synthesis has limits) - prefer sentence boundaries
     const chunkSize = 200; // characters per chunk
@@ -483,6 +503,8 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
     const speakChunk = (text, rate = speechRate, attempt = 1) => {
       return new Promise((resolve, reject) => {
         try {
+          // If session changed since speakChapter started, abort
+          if (session !== speakSessionRef.current) return reject(new Error('Speak session aborted'));
           const utterance = new SpeechSynthesisUtterance(text);
           utteranceRef.current = utterance;
           utterance.rate = Math.max(0.1, Math.min(2.0, rate));
@@ -504,9 +526,17 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
             if (preferredVoice) utterance.voice = preferredVoice;
           }
 
-          utterance.onend = () => resolve();
+          utterance.onend = () => {
+            // If session changed, treat as aborted
+            if (session !== speakSessionRef.current) return resolve();
+            // Clear current utterance ref
+            try { if (utteranceRef.current === utterance) utteranceRef.current = null; } catch (e) {}
+            resolve();
+          };
           utterance.onerror = (errEvent) => {
             console.error('Speech utterance error event:', errEvent);
+            // Clear current utterance ref
+            try { if (utteranceRef.current === utterance) utteranceRef.current = null; } catch (e) {}
             reject(errEvent);
           };
           try {
@@ -522,6 +552,8 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
     };
 
     const speakNextChunk = async () => {
+      // If session changed, stop progressing
+      if (session !== speakSessionRef.current) return;
       if (chunkIndex >= chunks.length) {
         // Chapter finished
         setIsPlaying(false);
@@ -542,9 +574,12 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
           await speakChunk(curChunk, curRate, attempt + 1);
           // Success: move to next chunk
           chunkIndex++;
-          // readingPosition indexes the next chunk we will read; highlight current chunk on UI
+          // readingPosition indexes the next chunk we will read; highlight next chunk on UI
           setReadingPosition(chunkIndex);
-          speakNextChunk();
+          // Check if session still active before recursing
+          if (session !== speakSessionRef.current) return;
+          // Proceed to next chunk
+          await speakNextChunk();
           return;
         } catch (err) {
           attempt++;
@@ -768,6 +803,16 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
     }
   };
 
+  const handleJumpToChunk = (idx) => {
+    // Jump UI to a chunk and optionally resume playback from there
+    setReadingPosition(idx);
+    try { speechSynthesisRef.current.cancel(); } catch (e) {}
+    if (chapterText) {
+      // Start speaking from the selected chunk
+      speakChapter(chapterText, idx);
+    }
+  };
+
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds)) return '0:00';
     const mins = Math.floor(seconds / 60);
@@ -777,17 +822,17 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full border border-purple-500/20 overflow-hidden">
+      <div className={panelClass}>
         {/* Header */}
-        <div className="bg-white/5 backdrop-blur-xl border-b border-white/10 p-6">
+        <div className="bg-white/5 backdrop-blur-xl border-b border-white/10 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                <Book className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Book className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">{audiobook.title}</h2>
-                <p className="text-purple-300">by {audiobook.author}</p>
+                <h2 className="text-lg font-semibold text-white truncate">{audiobook.title}</h2>
+                <p className="text-sm text-purple-300 truncate">by {audiobook.author}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -795,232 +840,298 @@ const AudiobookStreamPlayer = ({ audiobook, startChapter = 1, onClose, forceAvoi
                 <span className="font-semibold">{(avoidServerGeneration || !serverPlayback) ? 'Browser TTS' : 'Server audio'}</span>
               </div>
               <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-400/50 transition-all"
-            >
-              <X className="w-6 h-6 text-purple-300 hover:text-red-400" />
-            </button>
+                onClick={() => setIsPortrait(!isPortrait)}
+                title={isPortrait ? 'Switch to landscape' : 'Switch to portrait'}
+                className="p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+              >
+                <RotateCcw className="w-5 h-5 text-purple-300" />
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-400/50 transition-all"
+              >
+                <X className="w-6 h-6 text-purple-300 hover:text-red-400" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Player Content */}
-        <div className="p-8 space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-              <p className="text-red-400 text-center">{error}</p>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {loading && (
-            <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
-              <p className="text-purple-300 text-center flex items-center justify-center gap-2">
-                <Loader className="w-5 h-5 animate-spin" />
-                Loading chapter...
-              </p>
-            </div>
-          )}
-
-          {/* Chapter Info */}
-          <div className="text-center space-y-2">
-            <div className="text-purple-300 text-sm">Chapter {currentChapter} of {audiobook.chapter_count}</div>
-            <h3 className="text-2xl font-bold text-white">{currentChapterTitle}</h3>
-            {isPlaying && (
-              <div className="text-purple-400 text-sm flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-                Reading...
-              </div>
-            )}
-          </div>
-
-          {/* Chapter text with current-chunk highlight */}
-          <div ref={chunksContainerRef} className="bg-white/3 p-4 rounded-xl max-h-56 overflow-auto text-sm text-slate-200">
-            {ttsChunks && ttsChunks.length > 0 ? (
-              ttsChunks.map((chunk, idx) => (
-                <span id={`chunk-${idx}`} key={idx} className={`inline-block mr-1 mb-1 px-2 py-1 rounded ${idx === readingPosition ? 'bg-purple-600/80 text-white' : 'bg-white/5 text-purple-200'}`}>
-                  {chunk}
-                </span>
-              ))
-            ) : (
-              <p className="text-purple-200">{chapterText}</p>
-            )}
-          </div>
-
-          {/* Progress Indicator (simulated) */}
-          <div className="space-y-2">
-            <div className="h-2 bg-purple-900/30 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                style={{ width: isPlaying ? '50%' : '0%' }}
-              />
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center justify-center gap-6">
-            {/* Previous Chapter */}
-            <button
-              onClick={handlePrevChapter}
-              disabled={currentChapter === 1 || loading}
-              className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 hover:border-purple-400/50 flex items-center justify-center transition-all"
-            >
-              <SkipBack className="w-5 h-5 text-purple-300" />
-            </button>
-
-            {/* Play/Pause Button */}
-            <button
-              onClick={togglePlay}
-              disabled={loading}
-              className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 flex items-center justify-center transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-105 disabled:scale-100"
-            >
-              {loading ? (
-                <Loader className="w-8 h-8 text-white animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="w-8 h-8 text-white" />
-              ) : (
-                <Play className="w-8 h-8 text-white ml-1" />
-              )}
-            </button>
-
-            {/* Next Chapter */}
-            <button
-              onClick={handleNextChapter}
-              disabled={currentChapter === audiobook.chapter_count || loading}
-              className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 hover:border-purple-400/50 flex items-center justify-center transition-all"
-            >
-              <SkipForward className="w-5 h-5 text-purple-300" />
-            </button>
-          </div>
-
-          {/* Recording Control */}
-          <div className="flex flex-col items-center gap-3">
-            <button
-              onClick={toggleRecording}
-              disabled={!isPlaying && !isRecording}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-                isRecording
-                  ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                  : 'bg-white/5 hover:bg-white/10 text-purple-300 border border-white/10'
-              } disabled:opacity-30 disabled:cursor-not-allowed`}
-              title={isRecording ? 'Stop recording and download' : 'Record the audio as it plays'}
-            >
-              {isRecording ? (
-                <>
-                  <Circle className="w-4 h-4 fill-current" />
-                  Stop Recording
-                </>
-              ) : (
-                <>
-                  <Circle className="w-4 h-4" />
-                  Record Reading
-                </>
-              )}
-            </button>
-            {isRecording && (
-              <p className="text-xs text-purple-300 text-center">
-                🎙️ Recording in progress... File will download when you stop
-              </p>
-            )}
-            {recordedChunks.length > 0 && !isRecording && (
-              <div className="text-sm text-green-400 flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Recording saved!
-              </div>
-            )}
-          </div>
-
-          {/* Volume Control */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={toggleMute}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
-            >
-              {isMuted || volume === 0 ? (
-                <VolumeX className="w-5 h-5 text-purple-300" />
-              ) : (
-                <Volume2 className="w-5 h-5 text-purple-300" />
-              )}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={isMuted ? 0 : volume}
-              onChange={handleVolumeChange}
-              className="flex-1 h-2 bg-purple-900/30 rounded-full appearance-none cursor-pointer
-                [&::-webkit-slider-thumb]:appearance-none
-                [&::-webkit-slider-thumb]:w-4
-                [&::-webkit-slider-thumb]:h-4
-                [&::-webkit-slider-thumb]:rounded-full
-                [&::-webkit-slider-thumb]:bg-gradient-to-r
-                [&::-webkit-slider-thumb]:from-purple-500
-                [&::-webkit-slider-thumb]:to-pink-500
-                [&::-webkit-slider-thumb]:cursor-pointer
-                [&::-webkit-slider-thumb]:shadow-lg
-                [&::-webkit-slider-thumb]:hover:scale-110
-                [&::-webkit-slider-thumb]:transition-transform"
-            />
-          </div>
-
-          {/* Voice Settings */}
-          <div className="space-y-3">
-            <button
-              onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-xl border border-white/20 text-white font-medium"
-            >
-              <Settings className="w-5 h-5" />
-              Voice Settings
-            </button>
-            {showVoiceSettings && (
-              <div className="bg-white/5 p-4 rounded-xl backdrop-blur-xl border border-white/10 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-purple-200 mb-2">Voice</label>
-                  <select
-                    value={selectedVoice || ''}
-                    onChange={(e) => handleVoiceChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">Default</option>
-                    {availableVoices.map((v) => (
-                      <option key={v.value} value={v.value}>
-                        {v.label}
-                      </option>
-                    ))}
-                  </select>
+        {/* Player Content - two-column layout: left = main reading, right = settings/subtopics */}
+        <div className="p-3 overflow-auto" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
+          <div className={layoutClass}>
+            {/* Left: main reading area */}
+            <div className={`${leftColClass} space-y-3`}>
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                  <p className="text-red-400 text-center">{error}</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-purple-200 mb-2">Rate: {speechRate.toFixed(1)}</label>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="2.0"
-                    step="0.1"
-                    value={speechRate}
-                    onChange={(e) => handleRateChange(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-purple-500 [&::-webkit-slider-thumb]:to-pink-500"
+              )}
+
+              {/* Loading State */}
+              {loading && (
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-2">
+                  <p className="text-purple-300 text-center flex items-center justify-center gap-2 text-sm">
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Loading chapter...
+                  </p>
+                </div>
+              )}
+
+              {/* Chapter Info */}
+              <div className="text-left space-y-1">
+                <div className="text-purple-300 text-xs">Chapter {currentChapter} of {audiobook.chapter_count}</div>
+                <h3 className="text-lg font-semibold text-white truncate">{currentChapterTitle}</h3>
+                {isPlaying && (
+                  <div className="text-purple-400 text-sm flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+                    Reading...
+                  </div>
+                )}
+              </div>
+
+              {/* Chapter display area: compact (single chunk) or expanded (full chapter) */}
+              <div className="flex-1 flex flex-col">
+                {!showFullChapter ? (
+                  // Compact chunk view: show only the current chunk, with smaller nav and expand toggle
+                  <div className="flex-1 flex flex-col items-stretch">
+                    <div className="bg-white/3 p-3 rounded-md flex-1 flex items-center justify-center text-sm text-slate-200">
+                      {ttsChunks && ttsChunks.length > 0 ? (
+                        <div id={`chunk-${readingPosition}`} className="w-full">
+                          <div className="text-slate-200 text-sm leading-snug">{ttsChunks[readingPosition]}</div>
+                        </div>
+                      ) : (
+                        <p className="text-purple-200 text-sm">{chapterText}</p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 mt-2">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => { if (readingPosition > 0) { setReadingPosition(readingPosition - 1); try{ speechSynthesisRef.current.cancel(); }catch(e){} }} } className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-purple-200 text-sm disabled:opacity-40" disabled={readingPosition === 0}>
+                          Prev
+                        </button>
+                        <button onClick={() => { if (ttsChunks && readingPosition < ttsChunks.length - 1) { setReadingPosition(readingPosition + 1); try{ speechSynthesisRef.current.cancel(); }catch(e){} } }} className="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-purple-200 text-sm disabled:opacity-40" disabled={!(ttsChunks && readingPosition < ttsChunks.length - 1)}>
+                          Next
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => { setShowFullChapter(true); }} className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-white text-sm">Expand</button>
+                        <div className="text-xs text-purple-300">{Math.min(ttsChunks.length, readingPosition + 1)}/{ttsChunks.length || 0}</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Expanded chapter view: full scrollable text but constrained height to avoid page overflow
+                  <div className="flex-1 flex flex-col">
+                    <div className="bg-white/3 p-3 rounded-md overflow-auto text-sm text-slate-200 flex-1" style={{ maxHeight: '45vh' }}>
+                      <div className="whitespace-pre-wrap text-sm">{chapterText}</div>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 mt-2">
+                      <button onClick={() => setShowFullChapter(false)} className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-white text-sm">Collapse</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Indicator (simulated) */}
+              <div className="space-y-2">
+                <div className="h-2 bg-purple-900/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                    style={{ width: isPlaying ? '50%' : '0%' }}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-purple-200 mb-2">Pitch: {speechPitch.toFixed(1)}</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={speechPitch}
-                    onChange={(e) => handlePitchChange(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-purple-500 [&::-webkit-slider-thumb]:to-pink-500"
-                  />
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-6">
+                {/* Previous Chapter */}
+                <button
+                  onClick={handlePrevChapter}
+                  disabled={currentChapter === 1 || loading}
+                  className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 hover:border-purple-400/50 flex items-center justify-center transition-all"
+                >
+                  <SkipBack className="w-5 h-5 text-purple-300" />
+                </button>
+
+                {/* Play/Pause Button */}
+                <button
+                  onClick={togglePlay}
+                  disabled={loading}
+                  className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 flex items-center justify-center transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-105 disabled:scale-100"
+                >
+                  {loading ? (
+                    <Loader className="w-8 h-8 text-white animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-8 h-8 text-white" />
+                  ) : (
+                    <Play className="w-8 h-8 text-white ml-1" />
+                  )}
+                </button>
+
+                {/* Next Chapter */}
+                <button
+                  onClick={handleNextChapter}
+                  disabled={currentChapter === audiobook.chapter_count || loading}
+                  className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed border border-white/10 hover:border-purple-400/50 flex items-center justify-center transition-all"
+                >
+                  <SkipForward className="w-5 h-5 text-purple-300" />
+                </button>
+              </div>
+
+              {/* Recording Control */}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={toggleRecording}
+                  disabled={!isPlaying && !isRecording}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+                    isRecording
+                      ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                      : 'bg-white/5 hover:bg-white/10 text-purple-300 border border-white/10'
+                  } disabled:opacity-30 disabled:cursor-not-allowed`}
+                  title={isRecording ? 'Stop recording and download' : 'Record the audio as it plays'}
+                >
+                  {isRecording ? (
+                    <>
+                      <Circle className="w-4 h-4 fill-current" />
+                      Stop Recording
+                    </>
+                  ) : (
+                    <>
+                      <Circle className="w-4 h-4" />
+                      Record Reading
+                    </>
+                  )}
+                </button>
+                {isRecording && (
+                  <p className="text-xs text-purple-300 text-center">
+                    🎙️ Recording in progress... File will download when you stop
+                  </p>
+                )}
+                {recordedChunks.length > 0 && !isRecording && (
+                  <div className="text-sm text-green-400 flex items-center gap-2">
+                    <Download className="w-4 h-4" />
+                    Recording saved!
+                  </div>
+                )}
+              </div>
+
+              {/* Volume Control */}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={toggleMute}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+                >
+                  {isMuted || volume === 0 ? (
+                    <VolumeX className="w-5 h-5 text-purple-300" />
+                  ) : (
+                    <Volume2 className="w-5 h-5 text-purple-300" />
+                  )}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="flex-1 h-2 bg-purple-900/30 rounded-full appearance-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-4
+                    [&::-webkit-slider-thumb]:h-4
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:bg-gradient-to-r
+                    [&::-webkit-slider-thumb]:from-purple-500
+                    [&::-webkit-slider-thumb]:to-pink-500
+                    [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-webkit-slider-thumb]:shadow-lg
+                    [&::-webkit-slider-thumb]:hover:scale-110
+                    [&::-webkit-slider-thumb]:transition-transform"
+                />
+              </div>
+            </div>
+
+            {/* Right: settings and subtopics */}
+            <div className={`${rightColClass} space-y-4`}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-purple-200">
+                <span className="font-semibold">{(avoidServerGeneration || !serverPlayback) ? 'Browser TTS' : 'Server audio'}</span>
+              </div>
+
+              <button
+                onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all backdrop-blur-xl border border-white/20 text-white font-medium"
+              >
+                <Settings className="w-5 h-5" />
+                Voice Settings
+              </button>
+
+              {showVoiceSettings && (
+                <div className="bg-white/5 p-4 rounded-xl backdrop-blur-xl border border-white/10 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-purple-200 mb-2">Voice</label>
+                    <select
+                      value={selectedVoice || ''}
+                      onChange={(e) => handleVoiceChange(e.target.value)}
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">Default</option>
+                      {availableVoices.map((v) => (
+                        <option key={v.value} value={v.value}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-200 mb-2">Rate: {speechRate.toFixed(1)}</label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="2.0"
+                      step="0.1"
+                      value={speechRate}
+                      onChange={(e) => handleRateChange(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-purple-500 [&::-webkit-slider-thumb]:to-pink-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-purple-200 mb-2">Pitch: {speechPitch.toFixed(1)}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={speechPitch}
+                      onChange={(e) => handlePitchChange(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-purple-500 [&::-webkit-slider-thumb]:to-pink-500"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm text-purple-200">Avoid server generation</label>
+                    <input type="checkbox" checked={avoidServerGeneration} onChange={(e) => setAvoidServerGeneration(e.target.checked)} />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm text-purple-200">Avoid server generation</label>
-                  <input type="checkbox" checked={avoidServerGeneration} onChange={(e) => setAvoidServerGeneration(e.target.checked)} />
+              )}
+
+              {/* Subtopics / Chunks list - clickable for quick navigation */}
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <div className="text-sm text-purple-200 font-semibold mb-2">Subtopics</div>
+                <div className="space-y-2 max-h-64 overflow-auto">
+                  {ttsChunks && ttsChunks.length > 0 ? (
+                    ttsChunks.map((c, i) => (
+                      <button key={i} onClick={() => { handleJumpToChunk(i); setShowFullChapter(false); }} className={`w-full text-left px-3 py-2 rounded ${i === readingPosition ? 'bg-purple-600/80 text-white' : 'bg-white/5 text-purple-200'} hover:bg-purple-600/60` }>
+                        <div className="text-sm">
+                          {c.length > 120 ? `${c.substring(0,120).trim()}...` : c}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-sm text-purple-300">No subtopics available</div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

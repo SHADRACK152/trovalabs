@@ -363,6 +363,79 @@ export const luminoAPI = {
     const response = await api.delete(`/branch/${conversationId}/${branchId}`);
     return response.data;
   },
+  // ==================== Audiobook Management (series, collections, authors, narrators)
+
+  // Series
+  async listSeries() {
+    const response = await api.get('/audiobooks/series');
+    return response.data;
+  },
+  async createSeries(payload) {
+    const response = await api.post('/audiobooks/series', payload);
+    return response.data;
+  },
+  async updateSeries(id, payload) {
+    const response = await api.put(`/audiobooks/series/${encodeURIComponent(id)}`, payload);
+    return response.data;
+  },
+  async deleteSeries(id) {
+    const response = await api.delete(`/audiobooks/series/${encodeURIComponent(id)}`);
+    return response.data;
+  },
+
+  // Collections
+  async listCollections() {
+    const response = await api.get('/audiobooks/collections');
+    return response.data;
+  },
+  async createCollection(payload) {
+    const response = await api.post('/audiobooks/collections', payload);
+    return response.data;
+  },
+  async updateCollection(id, payload) {
+    const response = await api.put(`/audiobooks/collections/${encodeURIComponent(id)}`, payload);
+    return response.data;
+  },
+  async deleteCollection(id) {
+    const response = await api.delete(`/audiobooks/collections/${encodeURIComponent(id)}`);
+    return response.data;
+  },
+
+  // Authors
+  async listAuthors() {
+    const response = await api.get('/audiobooks/authors');
+    return response.data;
+  },
+  async createAuthor(payload) {
+    const response = await api.post('/audiobooks/authors', payload);
+    return response.data;
+  },
+  async updateAuthor(id, payload) {
+    const response = await api.put(`/audiobooks/authors/${encodeURIComponent(id)}`, payload);
+    return response.data;
+  },
+  async deleteAuthor(id) {
+    const response = await api.delete(`/audiobooks/authors/${encodeURIComponent(id)}`);
+    return response.data;
+  },
+
+  // Narrators
+  async listNarrators() {
+    const response = await api.get('/audiobooks/narrators');
+    return response.data;
+  },
+  async createNarrator(payload) {
+    const response = await api.post('/audiobooks/narrators', payload);
+    return response.data;
+  },
+  async updateNarrator(id, payload) {
+    const response = await api.put(`/audiobooks/narrators/${encodeURIComponent(id)}`, payload);
+    return response.data;
+  },
+  async deleteNarrator(id) {
+    const response = await api.delete(`/audiobooks/narrators/${encodeURIComponent(id)}`);
+    return response.data;
+  },
 };
 
 // Export both the api instance and luminoAPI

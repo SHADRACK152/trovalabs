@@ -1,0 +1,48 @@
+name: lumino-ai-app
+region: ams
+
+services:
+  - name: backend
+    github:
+      repo: SHADRACK152/Lumino-ai
+      branch: main
+      deploy_on_push: true
+      dir: backend
+    dockerfile_path: backend/Dockerfile
+    run_command: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD
+        value: "REPLACE_WITH_DATABASE_URL"
+        type: SECRET
+      - key: GROQ_API_KEY
+        scope: RUN_AND_BUILD
+        value: "REPLACE_WITH_GROQ_KEY"
+        type: SECRET
+      - key: OPENAI_API_KEY
+        scope: RUN_AND_BUILD
+        value: ""
+        type: SECRET
+
+static_sites:
+  - name: frontend
+    github:
+      repo: SHADRACK152/Lumino-ai
+      branch: main
+      deploy_on_push: true
+      dir: frontend
+    build_command: npm install --legacy-peer-deps && npm run build
+    build_output_dir: dist
+    envs:
+      - key: VITE_API_URL
+        value: "https://REPLACE_WITH_BACKEND_DOMAIN"
+        scope: RUN_AND_BUILD
+        type: SECRET
+
+# Notes:
+# 1) `repo` fields have been set to your GitHub repo `SHADRACK152/Lumino-ai`.
+# 2) Replace `REPLACE_WITH_DATABASE_URL`, `REPLACE_WITH_GROQ_KEY`, and `REPLACE_WITH_BACKEND_DOMAIN` with real values
+#    before deploying, or set them in the DigitalOcean App Platform UI after app creation.
+# 3) Deploy with: `doctl apps create --spec digitalocean/app-spec.yaml`

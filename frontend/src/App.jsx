@@ -10,6 +10,11 @@ import ProfileSetup from './components/ProfileSetup';
 import TextChat from './components/ChatPage';
 import VoiceConversation from './components/VoiceConversation';
 import AudiobookPage from './components/AudiobookPage';
+import SeriesPage from './components/SeriesPage';
+import CollectionsPage from './components/CollectionsPage';
+import AuthorsPage from './components/AuthorsPage';
+import NarratorsPage from './components/NarratorsPage';
+import PreferencesPage from './components/PreferencesPage';
 import OAuthCallback from './components/OAuthCallback';
 import './index.css';
 
@@ -69,6 +74,46 @@ function App() {
               <AudiobookPage />
             </ProtectedRoute>
           } 
+        />
+        <Route 
+          path="/audiobooks/series"
+          element={
+            <ProtectedRoute>
+              <SeriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/audiobooks/collections"
+          element={
+            <ProtectedRoute>
+              <CollectionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/audiobooks/authors"
+          element={
+            <ProtectedRoute>
+              <AuthorsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/audiobooks/narrators"
+          element={
+            <ProtectedRoute>
+              <NarratorsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/audiobooks/preferences"
+          element={
+            <ProtectedRoute>
+              <PreferencesPage />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>
