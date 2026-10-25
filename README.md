@@ -150,6 +150,21 @@ The MCP query endpoint accepts a tool name and an `arguments` object, for exampl
 | `/info/blog` | Public article list. |
 | `/blog/:slug` | Published article. |
 
+## Deploy to Vercel
+
+Connect the `SHADRACK152/trovalabs` GitHub repository to a Vercel project and set the production branch to `main`. Use the repository root (`.`) as the project root so Vercel can find the root `package.json`.
+
+Recommended build settings:
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | Auto-detect (TanStack Start) |
+| Install command | `npm install` |
+| Build command | `npm run build` |
+| Node.js version | 20 or later |
+
+Add any required public `VITE_` variables in the Vercel project’s Environment Variables settings, then deploy the latest commit on `main`. Review the deployment’s Build Logs if the build fails. Vercel can automatically create deployments for commits pushed to the configured production branch.
+
 ## Production notes
 
 The API verifies workspace JWTs but does not issue login sessions. Production authentication therefore needs a trusted OAuth/session issuer that signs HS256 tokens with `sub`, `workspace_id`, and `role` claims using the same `TROVALABS_SESSION_SECRET`. Configure OAuth credentials and callback routes in that issuer.
