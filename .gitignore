@@ -1,39 +1,34 @@
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-env/
-backend/.venv/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Node
-node_modules/
-frontend/node_modules/
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+.tanstack/**
+.nitro
+*.local
+**/.env
+!**/.env.example
 
-# Build artifacts
-dist/
-build/
-.parcel-cache/
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars
 
-# IDEs
-.idea/
-.vscode/
-
-# Secrets & env
-.env
-.env.local
-.env.*.local
-
-# OS files
-Thumbs.db
-desktop.ini
-
-# Misc
-*.egg-info/
-pip-wheel-metadata/
-
-# Local database files
-database/*.db
-database/*.db.bak
-backend/database/*.db
-backend/database/*.db.bak
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,28 @@
+{
+  "name": "@trovalabs/mcp-server",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "TrovaLabs MCP stdio adapter for local AI editors",
+  "bin": {
+    "trovalabs-mcp": "./dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.16.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.8.3"
+  }
+}

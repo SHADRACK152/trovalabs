@@ -1,273 +1,151 @@
-# Lumino AI — Personalized Voice Chatbot with Tone Control
+# Trova Context Hub
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688.svg)](https://fastapi.tiangolo.com)
-
-**Lumino AI** is a real-time voice-enabled AI chatbot that understands natural speech, generates intelligent responses, and speaks back with controllable tone and emotion.
-
-## ✨ Features
-
-- 🎤 **Real-time Voice Conversation**: ASR → LLM → TTS pipeline with <2s latency
-- 🎭 **Tone Control**: Calm, neutral, or energetic speech with SSML prosody
-- 🧠 **Smart AI**: Powered by Groq (Llama 3.1), OpenAI GPT-4, or Claude Sonnet 4.5
-- 🔊 **High-Quality TTS**: Natural-sounding voice synthesis
-- � **Audiobook Creation**: Upload novels/stories and convert them to audiobooks
-- 🎧 **Offline Listening**: Download and share audiobook chapters
-- �🔒 **Privacy-First**: No audio storage without explicit consent
-- 🏗️ **Modular Architecture**: Clean separation of ASR, LLM, and TTS services
-
-## 🚀 Quick Start
-
-### Option 1: Automated Setup (Recommended)
-
-```bash
-# 1. Verify setup
-verify-setup.bat
-
-# 2. Start both backend and frontend
-start.bat
-
-# 3. Open http://localhost:5173 and start talking!
-```
-
-### Option 2: Manual Setup
-
-**Backend:**
-```bash
-cd backend
-pip install -r requirements.txt
-copy .env.example .env
-# Edit .env and add your OPENAI_API_KEY
-python main.py
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-copy .env.example .env
-npm run dev
-```
-
-See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
-
-## 📁 Project Structure
-
-```
-Lumino ai/
-├── backend/                    # FastAPI backend
-│   ├── main.py                # API endpoints
-│   ├── orchestrator.py        # Pipeline coordinator (ASR→LLM→TTS)
-│   ├── asr.py                 # Speech-to-text (Whisper)
-│   ├── llm.py                 # Language model (GPT-4/Claude)
-│   ├── tts.py                 # Text-to-speech with tone control
-│   ├── config.py              # Configuration management
-│   ├── requirements.txt       # Python dependencies
-│   ├── .env.example           # Environment template
-│   └── README.md              # Backend documentation
-├── frontend/                   # React + Vite frontend
-│   ├── src/
-│   │   ├── App.jsx            # Main application
-│   │   ├── components/
-│   │   │   ├── VoiceRecorder.jsx       # Mic recording with visualization
-│   │   │   ├── ToneSelector.jsx        # Tone selection UI
-│   │   │   ├── AudioPlayer.jsx         # Audio playback controls
-│   │   │   └── ConversationHistory.jsx # Chat history display
-│   │   ├── services/
-│   │   │   └── api.js         # Backend API integration
-│   │   └── index.css          # Tailwind styles
-│   ├── package.json           # Node dependencies
-│   ├── vite.config.js         # Vite configuration
-│   ├── tailwind.config.js     # Tailwind theme
-│   └── .env.example           # Frontend environment template
-├── configs/
-│   └── models.json            # Model feature flags
-├── scripts/
-│   └── toggle_model_flag.js   # Model management utility
-├── docs/
-│   └── enable_claude_sonnet45.md  # Claude integration guide
-├── start.bat                   # Windows startup script
-├── verify-setup.bat            # Setup verification script
-├── QUICKSTART.md              # Quick start guide
-├── INTEGRATION.md             # Integration verification guide
-└── README.md                  # This file
-```
-
-## 🎯 API Endpoints
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/health` | GET | Service health check |
-| `/transcribe` | POST | Convert speech to text |
-| `/respond-text` | POST | Get text response from LLM |
-| `/respond` | POST | Get audio response with TTS |
-| `/voice-roundtrip` | POST | Complete ASR→LLM→TTS pipeline |
-
-## 🎨 Tone Options
-
-Control how Lumino speaks:
-
-- **Calm**: Slow, soothing, peaceful (85% speed, lower pitch)
-- **Neutral**: Standard conversational tone (100% speed)
-- **Energetic**: Fast, enthusiastic, upbeat (110% speed, higher pitch)
-
-## 🧪 Example Usage
-
-### Text Response
-
-```bash
-curl -X POST http://localhost:8000/respond-text \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Hello, who are you?","tone":"energetic"}'
-```
-
-### Audio Response
-
-```bash
-curl -X POST http://localhost:8000/respond \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Tell me a joke","tone":"neutral"}' \
-  -o joke.mp3
-```
-
-### Voice Roundtrip
-
-```bash
-curl -X POST http://localhost:8000/voice-roundtrip \
-  -F "audio=@question.webm" \
-  -F "tone=calm" \
-  -o answer.mp3
-```
-
-## 🤖 Claude Sonnet 4.5 Integration
-
-✓ **Already enabled!** The backend automatically uses Claude Sonnet 4.5 when enabled in `configs/models.json`.
-
-Toggle models:
-```bash
-# Enable Claude Sonnet 4.5
-node scripts/toggle_model_flag.js claude-sonnet-4.5 enable
-
-# Disable Claude Sonnet 4.5
-node scripts/toggle_model_flag.js claude-sonnet-4.5 disable
-```
-
-## 🛠️ Tech Stack
-
-**Backend:**
-- FastAPI (Python 3.9+)
-- OpenAI Whisper API (ASR)
-- Groq (Llama 3.1) / OpenAI GPT-4 / Anthropic Claude (LLM)
-- OpenAI TTS with tone control
-- Pydantic Settings + dotenv
-
-**Frontend:**
-- React 18 with Hooks
-- Vite (build tool)
-- Tailwind CSS (styling)
-- Axios (HTTP client)
-- Lucide React (icons)
-- WebRTC (microphone access)
-
-## 📚 Documentation
-
-- [QUICKSTART.md](QUICKSTART.md) - Get started in 5 minutes
-- [INTEGRATION.md](INTEGRATION.md) - Frontend/backend integration guide
-- [backend/README.md](backend/README.md) - Detailed backend documentation
-- [docs/enable_claude_sonnet45.md](docs/enable_claude_sonnet45.md) - Claude integration guide
-
-## 🗺️ Roadmap
-
-See the full strategic roadmap in the project documentation:
-
-- ✅ **MVP (Month 1-2)**: Voice roundtrip, tone control, basic API
-- 🚧 **Phase 2 (Month 3-4)**: User profiles, memory, personalization
-- 📋 **Phase 3 (Month 4-6)**: Custom voice cloning, scaling, security audit
-- 📋 **Phase 4 (Month 6-12)**: Mobile app, integrations, enterprise features
-
-## 🧩 Architecture
-
-```
-User → Microphone
-       ↓ (audio/webm)
-    ┌──────────────────────┐
-    │  FastAPI Backend     │
-    │  ┌────────────────┐  │
-    │  │  Orchestrator  │  │
-    │  │   ┌─────────┐  │  │
-    │  │   │   ASR   │  │  │  (Whisper API)
-    │  │   └────┬────┘  │  │
-
-## 🔧 Deploying with Neon (Postgres)
-
-This repository supports using a hosted Postgres database such as Neon. To run the backend against Neon:
-
-1. Create a Neon database and copy the connection string. The connection string should look like:
-
-   `postgresql://<user>:<password>@<host>:<port>/<db>`
-
-2. Provide the connection string to the app. Two common options:
-
-   - Use an `.env` file (recommended for local development).
-     - Copy `.env.example` to `.env` and set `DATABASE_URL`.
-
-   - Set the environment variable for the current session:
-
-     - `cmd.exe`:
-
-       ```cmd
-       set DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<db>
-       python backend/main.py
-       ```
-
-     - `PowerShell`:
-
-       ```powershell
-       $env:DATABASE_URL = "postgresql://<user>:<password>@<host>:<port>/<db>"
-       python backend/main.py
-       ```
-
-3. Verify connection and schema:
-
-   - After the backend starts, run the verification script to list tables and counts:
-
-     ```cmd
-     python backend/scripts/verify_neon.py
-     ```
-
-Notes:
-- If you removed local SQLite DB files (the project will not recreate them), the app will require `DATABASE_URL` to be set.
-- Keep your Neon credentials private — do not commit them to Git.
-
-    │  │        ↓        │  │
-    │  │   ┌─────────┐  │  │
-    │  │   │   LLM   │  │  │  (GPT-4 / Claude)
-    │  │   └────┬────┘  │  │
-    │  │        ↓        │  │
-    │  │   ┌─────────┐  │  │
-    │  │   │   TTS   │  │  │  (OpenAI TTS)
-    │  │   └─────────┘  │  │
-    │  └────────────────┘  │
-    └──────┬───────────────┘
-           ↓ (audio/mp3)
-    User ← Speaker
-```
-
-## 🤝 Contributing
-
-Contributions welcome! Please read our contributing guidelines before submitting PRs.
-
-## 📄 License
-
-MIT License - see LICENSE file for details.
-
-## 🆘 Support
-
-- 📖 Read the [QUICKSTART.md](QUICKSTART.md)
-- 🐛 Report bugs via GitHub Issues
-- 💬 Join our community discussions
+Build a complete, single-page landing page for "TrovaLabs" using React, TypeScript, and Tailwind CSS. The overall design language, UI system, rounded container cards, color palette, floating widgets, and visual hierarchy across all sections must strictly follow the modern rounded-card aesthetic established in the reference hero design.
 
 ---
 
-**Built with ❤️ for developers who love voice AI**
+### GLOBAL DESIGN SYSTEM & STYLING
+
+- Outer Background: Soft neutral off-white canvas (`bg-[#e9ecef]`).
+
+- Primary Card Styling: Crisp white background (`bg-white`), hyper-rounded corners (`rounded-[36px]`), subtle borders (`border border-slate-100`), soft drop shadows (`shadow-sm`).
+
+- Brand Color Palette:
+
+  - Primary Accent: Vivid Warm Orange (`#f97316` / `#ea580c`)
+
+  - Dark Neutral: Deep Slate (`#0f172a`)
+
+  - Soft Neutral: Cool Muted Gray (`#64748B` / `#94A3B8`)
+
+- Typography: Modern sans-serif (Inter or Plus Jakarta Sans). Bold, high-contrast headings with clean tracking.
+
+- Interactive Elements: Pill-shaped buttons with rounded-full geometry and smooth hover states.
+
+---
+
+### SECTION 1: HERO SECTION
+
+1. Outer Layout:
+
+   - Contained inside a large white rounded card (`rounded-[36px] bg-white p-8 md:p-12 shadow-sm relative overflow-hidden`).
+
+2. Top Navigation Bar:
+
+   - Left: Minimal abstract geometry logo icon + "TrovaLabs" text in bold slate.
+
+   - Center: Nav links: "Home", "Solutions", "MCP Hub", "Docs", "Pricing" (muted gray font, subtle hover effect).
+
+   - Right: Pill-shaped CTA button "LOGIN" in orange (`bg-[#f97316] text-white rounded-full px-6 py-2.5 font-medium flex items-center gap-2`) paired with an attached circular arrow icon badge (`bg-[#ea580c] rounded-full p-1.5`).
+
+3. Left Column Content:
+
+   - Top Tagline: `#No.1 Developer Context Platform` in orange (`text-[#f97316] text-sm font-semibold tracking-wide`).
+
+   - Main Headline: Extra bold typography (`text-5xl md:text-6xl font-extrabold text-[#0f172a] leading-[1.15] mt-4 max-w-xl`).
+
+     - Text: "Unifying Code Context For A <span className="text-[#f97316]">Smarter Future</span>"
+
+   - Subtitle Paragraph: Muted gray text (`text-slate-500 text-sm md:text-base mt-6 max-w-md leading-relaxed`).
+
+     - Text: "Join us in creating seamless engineering workflows with cutting-edge developer context aggregation and MCP tools."
+
+   - Main CTA Button: Large orange pill button labeled "JOIN NOW" (`bg-[#f97316] hover:bg-[#ea580c] text-white font-semibold rounded-full px-8 py-3.5 shadow-md transition-all mt-8`).
+
+4. Floating Sub-Cards Overlay (Bottom-Left of Hero):
+
+   - Card 1: Elevated floating white glassmorphism card with thumbnail icon, title "Context Hub", subtitle "Live Pipeline Indexing" (`bg-white/90 backdrop-blur rounded-2xl p-3 shadow-lg flex items-center gap-3 border border-slate-100`).
+
+   - Card 2: Positioned slightly offset below Card 1, thumbnail icon, title "MCP Server Engine", subtitle "Connected to IDEs".
+
+5. Right Column Hero Visual (3D Asset):
+
+   - Render a high-res 3D tech/node asset or abstract metallic structure breaking out of the top right of the white container card (matching the spatial overflow of the wind turbine in the reference layout).
+
+   - Include a floating circular orange badge with a lightning icon near the top right of the 3D element.
+
+6. Bottom Metrics Bar (Dual Rounded Sub-Cards directly below Hero):
+
+   - Two side-by-side white rounded cards (`bg-white rounded-[28px] p-6 shadow-sm flex items-center gap-12 border border-slate-100 mt-4`):
+
+     - Metric 1: **99.9%** | Uptime & Context Retrieval Accuracy
+
+     - Metric 2: **10x+** | Faster Engineering Context Search
+
+---
+
+### SECTION 2: CORE FEATURES (GRID OF ROUNDED CARDS)
+
+- Section Header: Centered tagline `#TrovaLabs Capabilities` in orange, followed by headline "Everything You Need for Unified Context".
+
+- Layout: 3-column grid of white rounded cards (`rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-md transition-all`).
+
+- Card 1: "Real-Time PR Ingestion" – Automatic GitHub/GitLab webhook processing with real-time indexing.
+
+- Card 2: "Model Context Protocol (MCP)" – Direct IDE connection for Cursor, VS Code, and Claude Code.
+
+- Card 3: "Unified Search Engine" – Instant cross-repository and internal documentation context retrieval.
+
+---
+
+### SECTION 3: HOW IT WORKS (STEP-BY-STEP PROCESS)
+
+- Container: Single large white rounded card (`rounded-[36px] p-10 md:p-14 bg-white border border-slate-100 shadow-sm mt-8`).
+
+- Header: Left-aligned headline "Seamless Setup in 3 Minutes".
+
+- Steps Layout (3 Horizontal Columns):
+
+  - Step 01: "Connect Repositories" – One-click GitHub OAuth authorization.
+
+  - Step 02: "Spin Up MCP Server" – Expose context to your local or cloud IDE assistants.
+
+  - Step 03: "Query Anywhere" – Search context directly from code editors, web UI, or PR comments.
+
+---
+
+### SECTION 4: PRICING TIERS
+
+- Layout: 3-column cards enclosed inside rounded white containers (`rounded-[32px] p-8 border border-slate-100 shadow-sm relative`).
+
+- Card 1 (Community / Free): $0/mo – Single repository, local MCP server, basic context search.
+
+- Card 2 (Pro / Teams - Featured with Orange Accent Border & Badge): $29/dev/mo – Multi-repo indexing, Slack/GitHub webhooks, team search.
+
+- Card 3 (Enterprise): Custom Pricing – Dedicated deployment, SAML SSO, custom security audit logs.
+
+---
+
+### SECTION 5: FOOTER SECTION
+
+- Outer Frame: Large white rounded card (`rounded-[36px] bg-white p-8 md:p-12 border border-slate-100 shadow-sm mt-8 mb-8`).
+
+- Content Layout:
+
+  - Left: Logo + "TrovaLabs" brand name + brief description "Unifying developer context for modern engineering teams."
+
+  - Right: Column links for "Product", "Developers", "Company", and "Legal".
+
+  - Bottom Bar: Copyright notice + social links + small orange pill button "BACK TO TOP".
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+```sh
+git clone <this-repository-url>
+cd <repository-name>
+npm i
+npm run dev
+```
+
+## MCP integration
+
+The local MCP adapter lives in `packages/mcp-server`; the Node API and PostgreSQL/pgvector schema live in `services/api`.
+
+1. Start PostgreSQL with pgvector, copy `services/api/.env.example` to `services/api/.env`, and configure the database, session signing secret, and embeddings provider.
+2. In `services/api`, run `npm install`, `npm run db:migrate`, then `npm run dev`.
+3. Set `VITE_TROVALABS_API_URL=http://localhost:4000` for the dashboard. Create a real workspace API key after signing in with a session JWT accepted by the API service.
+4. In `packages/mcp-server`, run `npm install` and `npm run build`. Configure the IDE with `npx -y @trovalabs/mcp-server` and `TROVALABS_API_KEY`.
+
+The dashboard defaults to the local API on port 4000 in development and `https://api.trovalabs.com` in production. Production deployment also needs HTTPS, database migrations, a trusted session issuer using the configured HS256 secret and workspace claims, and repository ingestion to populate the context tables.
