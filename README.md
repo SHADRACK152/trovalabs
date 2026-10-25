@@ -1,151 +1,166 @@
-# Trova Context Hub
+# TrovaLabs
 
-Build a complete, single-page landing page for "TrovaLabs" using React, TypeScript, and Tailwind CSS. The overall design language, UI system, rounded container cards, color palette, floating widgets, and visual hierarchy across all sections must strictly follow the modern rounded-card aesthetic established in the reference hero design.
+TrovaLabs brings code, pull requests, and engineering knowledge into one searchable context hub. Developers can explore the workspace in the web dashboard or connect an MCP server to their AI editor.
 
----
+## What’s in the repository
 
-### GLOBAL DESIGN SYSTEM & STYLING
+- **Product site** — landing page, pricing, documentation, API examples, and company information.
+- **Workspace dashboard** — context search, repository and MCP configuration views, and workspace settings.
+- **Admin dashboard** — platform overview, user and infrastructure views, audit activity, and blog publishing.
+- **Blog** — publish articles from the admin area; published content appears on the public blog and can be embedded for MCP context search.
+- **MCP client** — a local stdio adapter for Cursor, VS Code, Claude Code, and other MCP-compatible clients.
+- **API service** — Express endpoints for MCP queries, API key management, and blog publishing, backed by PostgreSQL and pgvector.
 
-- Outer Background: Soft neutral off-white canvas (`bg-[#e9ecef]`).
+## Tech stack
 
-- Primary Card Styling: Crisp white background (`bg-white`), hyper-rounded corners (`rounded-[36px]`), subtle borders (`border border-slate-100`), soft drop shadows (`shadow-sm`).
+- React 19, TypeScript, and TanStack Start/Router
+- Tailwind CSS 4 and Vite
+- Express 5, PostgreSQL, and pgvector for the API service
+- Model Context Protocol SDK for the local MCP adapter
 
-- Brand Color Palette:
+## Run the web app
 
-  - Primary Accent: Vivid Warm Orange (`#f97316` / `#ea580c`)
+Requirements: Node.js 20 or later and npm.
 
-  - Dark Neutral: Deep Slate (`#0f172a`)
-
-  - Soft Neutral: Cool Muted Gray (`#64748B` / `#94A3B8`)
-
-- Typography: Modern sans-serif (Inter or Plus Jakarta Sans). Bold, high-contrast headings with clean tracking.
-
-- Interactive Elements: Pill-shaped buttons with rounded-full geometry and smooth hover states.
-
----
-
-### SECTION 1: HERO SECTION
-
-1. Outer Layout:
-
-   - Contained inside a large white rounded card (`rounded-[36px] bg-white p-8 md:p-12 shadow-sm relative overflow-hidden`).
-
-2. Top Navigation Bar:
-
-   - Left: Minimal abstract geometry logo icon + "TrovaLabs" text in bold slate.
-
-   - Center: Nav links: "Home", "Solutions", "MCP Hub", "Docs", "Pricing" (muted gray font, subtle hover effect).
-
-   - Right: Pill-shaped CTA button "LOGIN" in orange (`bg-[#f97316] text-white rounded-full px-6 py-2.5 font-medium flex items-center gap-2`) paired with an attached circular arrow icon badge (`bg-[#ea580c] rounded-full p-1.5`).
-
-3. Left Column Content:
-
-   - Top Tagline: `#No.1 Developer Context Platform` in orange (`text-[#f97316] text-sm font-semibold tracking-wide`).
-
-   - Main Headline: Extra bold typography (`text-5xl md:text-6xl font-extrabold text-[#0f172a] leading-[1.15] mt-4 max-w-xl`).
-
-     - Text: "Unifying Code Context For A <span className="text-[#f97316]">Smarter Future</span>"
-
-   - Subtitle Paragraph: Muted gray text (`text-slate-500 text-sm md:text-base mt-6 max-w-md leading-relaxed`).
-
-     - Text: "Join us in creating seamless engineering workflows with cutting-edge developer context aggregation and MCP tools."
-
-   - Main CTA Button: Large orange pill button labeled "JOIN NOW" (`bg-[#f97316] hover:bg-[#ea580c] text-white font-semibold rounded-full px-8 py-3.5 shadow-md transition-all mt-8`).
-
-4. Floating Sub-Cards Overlay (Bottom-Left of Hero):
-
-   - Card 1: Elevated floating white glassmorphism card with thumbnail icon, title "Context Hub", subtitle "Live Pipeline Indexing" (`bg-white/90 backdrop-blur rounded-2xl p-3 shadow-lg flex items-center gap-3 border border-slate-100`).
-
-   - Card 2: Positioned slightly offset below Card 1, thumbnail icon, title "MCP Server Engine", subtitle "Connected to IDEs".
-
-5. Right Column Hero Visual (3D Asset):
-
-   - Render a high-res 3D tech/node asset or abstract metallic structure breaking out of the top right of the white container card (matching the spatial overflow of the wind turbine in the reference layout).
-
-   - Include a floating circular orange badge with a lightning icon near the top right of the 3D element.
-
-6. Bottom Metrics Bar (Dual Rounded Sub-Cards directly below Hero):
-
-   - Two side-by-side white rounded cards (`bg-white rounded-[28px] p-6 shadow-sm flex items-center gap-12 border border-slate-100 mt-4`):
-
-     - Metric 1: **99.9%** | Uptime & Context Retrieval Accuracy
-
-     - Metric 2: **10x+** | Faster Engineering Context Search
-
----
-
-### SECTION 2: CORE FEATURES (GRID OF ROUNDED CARDS)
-
-- Section Header: Centered tagline `#TrovaLabs Capabilities` in orange, followed by headline "Everything You Need for Unified Context".
-
-- Layout: 3-column grid of white rounded cards (`rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-md transition-all`).
-
-- Card 1: "Real-Time PR Ingestion" – Automatic GitHub/GitLab webhook processing with real-time indexing.
-
-- Card 2: "Model Context Protocol (MCP)" – Direct IDE connection for Cursor, VS Code, and Claude Code.
-
-- Card 3: "Unified Search Engine" – Instant cross-repository and internal documentation context retrieval.
-
----
-
-### SECTION 3: HOW IT WORKS (STEP-BY-STEP PROCESS)
-
-- Container: Single large white rounded card (`rounded-[36px] p-10 md:p-14 bg-white border border-slate-100 shadow-sm mt-8`).
-
-- Header: Left-aligned headline "Seamless Setup in 3 Minutes".
-
-- Steps Layout (3 Horizontal Columns):
-
-  - Step 01: "Connect Repositories" – One-click GitHub OAuth authorization.
-
-  - Step 02: "Spin Up MCP Server" – Expose context to your local or cloud IDE assistants.
-
-  - Step 03: "Query Anywhere" – Search context directly from code editors, web UI, or PR comments.
-
----
-
-### SECTION 4: PRICING TIERS
-
-- Layout: 3-column cards enclosed inside rounded white containers (`rounded-[32px] p-8 border border-slate-100 shadow-sm relative`).
-
-- Card 1 (Community / Free): $0/mo – Single repository, local MCP server, basic context search.
-
-- Card 2 (Pro / Teams - Featured with Orange Accent Border & Badge): $29/dev/mo – Multi-repo indexing, Slack/GitHub webhooks, team search.
-
-- Card 3 (Enterprise): Custom Pricing – Dedicated deployment, SAML SSO, custom security audit logs.
-
----
-
-### SECTION 5: FOOTER SECTION
-
-- Outer Frame: Large white rounded card (`rounded-[36px] bg-white p-8 md:p-12 border border-slate-100 shadow-sm mt-8 mb-8`).
-
-- Content Layout:
-
-  - Left: Logo + "TrovaLabs" brand name + brief description "Unifying developer context for modern engineering teams."
-
-  - Right: Column links for "Product", "Developers", "Company", and "Legal".
-
-  - Bottom Bar: Copyright notice + social links + small orange pill button "BACK TO TOP".
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+```bash
+git clone https://github.com/SHADRACK152/trovalabs.git
+cd trovalabs
+npm install
 npm run dev
 ```
 
-## MCP integration
+Open the local URL printed by Vite.
 
-The local MCP adapter lives in `packages/mcp-server`; the Node API and PostgreSQL/pgvector schema live in `services/api`.
+### Available web commands
 
-1. Start PostgreSQL with pgvector, copy `services/api/.env.example` to `services/api/.env`, and configure the database, session signing secret, and embeddings provider.
-2. In `services/api`, run `npm install`, `npm run db:migrate`, then `npm run dev`.
-3. Set `VITE_TROVALABS_API_URL=http://localhost:4000` for the dashboard. Create a real workspace API key after signing in with a session JWT accepted by the API service.
-4. In `packages/mcp-server`, run `npm install` and `npm run build`. Configure the IDE with `npx -y @trovalabs/mcp-server` and `TROVALABS_API_KEY`.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the web app in development mode. |
+| `npm run build` | Build the web app for deployment. |
+| `npm run preview` | Preview the production build locally. |
+| `npm run lint` | Run ESLint. |
+| `npm test` | Run the Vitest suite. |
+| `npm run dev:api` | Start the API service. |
+| `npm run build:mcp` | Build the MCP client adapter. |
 
-The dashboard defaults to the local API on port 4000 in development and `https://api.trovalabs.com` in production. Production deployment also needs HTTPS, database migrations, a trusted session issuer using the configured HS256 secret and workspace claims, and repository ingestion to populate the context tables.
+## Run the API service
+
+The API requires PostgreSQL with the `pgvector` extension and an OpenAI-compatible embeddings endpoint.
+
+1. Create a database and enable `pgvector`.
+2. Copy `services/api/.env.example` to `services/api/.env` and set the database URL, session secret, and embedding provider credentials.
+3. Install the API dependencies and apply the schema:
+
+   ```bash
+   npm --prefix services/api install
+   npm --prefix services/api run db:migrate
+   ```
+
+4. Start the service from the repository root:
+
+   ```bash
+   npm run dev:api
+   ```
+
+The API listens on port `4000` by default. Set `VITE_TROVALABS_API_URL=http://localhost:4000` in the web app’s root `.env` file to point the dashboard at a local API.
+
+### Configuration reference
+
+| Variable | Purpose |
+| --- | --- |
+| `PORT` | API listen port; defaults to `4000`. |
+| `DATABASE_URL` | PostgreSQL connection string. |
+| `TROVALABS_SESSION_SECRET` | Secret used to verify workspace admin JWTs. |
+| `TROVALABS_EMBEDDINGS_URL` | OpenAI-compatible embeddings endpoint. |
+| `TROVALABS_EMBEDDINGS_API_KEY` | Embeddings provider key. |
+| `TROVALABS_EMBEDDINGS_MODEL` | Embeddings model name. |
+| `TROVALABS_EMBEDDING_DIMENSIONS` | Vector size; must match the database schema. |
+| `TROVALABS_CORS_ORIGINS` | Comma-separated allowed dashboard origins. |
+| `VITE_TROVALABS_API_URL` | API base URL used by the web app. |
+
+Keep real secrets in local environment files or your deployment secret manager. Do not commit them.
+
+## Connect an MCP client
+
+Build the adapter:
+
+```bash
+npm --prefix packages/mcp-server install
+npm run build:mcp
+```
+
+Configure an MCP-compatible editor with the server command and a workspace API key:
+
+```json
+{
+  "mcpServers": {
+    "trovalabs": {
+      "command": "npx",
+      "args": ["-y", "@trovalabs/mcp-server"],
+      "env": {
+        "TROVALABS_API_KEY": "tl_live_your_workspace_key"
+      }
+    }
+  }
+}
+```
+
+For a locally running API, also set `TROVALABS_API_URL` to `http://localhost:4000/v1/mcp/query`. Never commit a live API key.
+
+The adapter exposes these tools:
+
+- `search_code_context` — find relevant indexed code and engineering context.
+- `get_pr_diff_summary` — retrieve a pull request’s indexed summary.
+- `get_architectural_risk` — retrieve the latest available risk analysis.
+
+## API endpoints
+
+| Method | Endpoint | Access |
+| --- | --- | --- |
+| `GET` | `/healthz` | Public service health check. |
+| `GET` | `/v1/mcp/health` | Public API and database readiness. |
+| `POST` | `/v1/mcp/query` | Bearer TrovaLabs API key. |
+| `GET` / `POST` | `/v1/mcp/keys` | Workspace administrator session. |
+| `DELETE` | `/v1/mcp/keys/:keyId` | Workspace administrator session. |
+| `GET` | `/v1/blog` | Public published article list. |
+| `GET` | `/v1/blog/:slug` | Public published article. |
+| `GET` / `POST` | `/v1/admin/blog` | Workspace administrator session. |
+| `PUT` / `DELETE` | `/v1/admin/blog/:articleId` | Workspace administrator session. |
+
+The MCP query endpoint accepts a tool name and an `arguments` object, for example:
+
+```json
+{
+  "tool": "search_code_context",
+  "arguments": {
+    "query": "authentication flow"
+  }
+}
+```
+
+## Routes
+
+| Path | Page |
+| --- | --- |
+| `/` | TrovaLabs product site. |
+| `/dashboard` | Developer workspace. |
+| `/admin` | Administration dashboard. |
+| `/info/docs` | Documentation. |
+| `/info/api` | Interactive API examples. |
+| `/info/blog` | Public article list. |
+| `/blog/:slug` | Published article. |
+
+## Production notes
+
+The API verifies workspace JWTs but does not issue login sessions. Production authentication therefore needs a trusted OAuth/session issuer that signs HS256 tokens with `sub`, `workspace_id`, and `role` claims using the same `TROVALABS_SESSION_SECRET`. Configure OAuth credentials and callback routes in that issuer.
+
+Production MCP connections also require an HTTPS API deployment, a migrated PostgreSQL/pgvector database, embedding credentials, and repository ingestion that populates the context tables. Blog posts saved without a configured API are kept only in the current browser as a local preview; they are not shared or MCP-indexed.
+
+## Project layout
+
+```text
+packages/mcp-server/   Local stdio MCP adapter
+services/api/          Express API, database migration, and service docs
+src/components/        Shared dashboard, onboarding, and publishing UI
+src/routes/            Product site, dashboards, blog, and information pages
+```
